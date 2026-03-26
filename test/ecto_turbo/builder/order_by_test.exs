@@ -4,6 +4,7 @@ defmodule EctoTurbo.Builder.OrderByTest do
   use ExUnit.Case
   doctest EctoTurbo.Builder.OrderBy
 
+  alias EctoTurbo.Builder.Join
   alias EctoTurbo.Builder.OrderBy
   alias EctoTurbo.Hooks.Search.Attribute
   alias EctoTurbo.Hooks.Sort
@@ -118,7 +119,7 @@ defmodule EctoTurbo.Builder.OrderByTest do
 
       query =
         Post
-        |> EctoTurbo.Builder.Join.build([:category])
+        |> Join.build([:category])
         |> OrderBy.build(sorts, query_with_join_binding())
         |> Macro.to_string()
 
@@ -131,7 +132,7 @@ defmodule EctoTurbo.Builder.OrderByTest do
 
       query =
         Post
-        |> EctoTurbo.Builder.Join.build([:category])
+        |> Join.build([:category])
         |> OrderBy.build(sorts, query_with_join_binding())
         |> Macro.to_string()
 
