@@ -2,7 +2,7 @@ defmodule EctoTurbo.MixProject do
   use Mix.Project
 
   @version "0.1.0"
-  @source_url "https://github.com/cryptr-auth/ecto_turbo"
+  @source_url "https://github.com/docjerem/ecto-turbo"
 
   def project do
     [
@@ -11,7 +11,7 @@ defmodule EctoTurbo.MixProject do
       elixirc_options: [
         warnings_as_errors: true
       ],
-      elixir: "~> 1.14",
+      elixir: "~> 1.17",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -35,7 +35,12 @@ defmodule EctoTurbo.MixProject do
       {:ecto_sql, "~> 3.11"},
       {:postgrex, "~> 0.19", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
-      {:ex_machina, "~> 2.8", only: :test}
+      {:ex_machina, "~> 2.8", only: :test},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:doctor, "~> 0.22", only: :dev, runtime: false},
+      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -44,6 +49,18 @@ defmodule EctoTurbo.MixProject do
 
   defp aliases do
     [
+      audit: [
+        "credo --strict",
+        "deps.audit",
+        "deps.unlock --check-unused",
+        "dialyzer --format github",
+        "doctor --raise",
+        "format --check-formatted",
+        "sobelow --config",
+        # Hex tasks do not work in aliases, so we shell out:
+        &run_hex_outdated/1,
+        &run_hex_audit/1
+      ],
       test: [
         "ecto.drop -r EctoTurbo.TestRepo --quiet",
         "ecto.create -r EctoTurbo.TestRepo --quiet",
@@ -52,6 +69,9 @@ defmodule EctoTurbo.MixProject do
       ]
     ]
   end
+
+  defp run_hex_outdated(_), do: Mix.shell().cmd("mix hex.outdated")
+  defp run_hex_audit(_), do: Mix.shell().cmd("mix hex.audit")
 
   defp docs do
     [

@@ -3,6 +3,8 @@ defmodule EctoTurbo.Utils do
   Utils functions.
   """
 
+  @doc false
+  @spec done(any()) :: {:ok, any()} | {:error, any()}
   def done({:error, reason}), do: {:error, reason}
   def done(result), do: {:ok, result}
 
@@ -46,13 +48,13 @@ defmodule EctoTurbo.Utils do
       %{"a" => 1, "b" => %{"c" => 3, "d" => 4}}
 
   """
-  @spec stringify_keys(map()) :: map()
+  @spec stringify_keys(any()) :: any()
   def stringify_keys(map = %{}) do
     Enum.into(map, %{}, fn {k, v} -> {to_string(k), stringify_keys(v)} end)
   end
 
-  def stringify_keys([head | rest]) do
-    [stringify_keys(head) | stringify_keys(rest)]
+  def stringify_keys(list) when is_list(list) do
+    Enum.map(list, &stringify_keys/1)
   end
 
   def stringify_keys(not_a_map) do
@@ -75,7 +77,7 @@ defmodule EctoTurbo.Utils do
       ["string", %{not_nil: "a value", nested: %{other: "other"}}, ["nested", 2]]
 
   """
-  @spec compaction!(map() | list()) :: map() | list() | %ArgumentError{}
+  @spec compaction!(map() | list()) :: map() | list()
   def compaction!(value)
 
   def compaction!(value) when is_map(value) do
@@ -131,7 +133,7 @@ defmodule EctoTurbo.Utils do
   """
   def compactify!(map) when is_map(map) do
     map
-    |> Enum.reject(fn {_k, v} -> is_nil(v) || is_empty_string(v) || empty_map(v) end)
+    |> Enum.reject(fn {_k, v} -> is_nil(v) || empty_string?(v) || empty_map?(v) end)
     |> Enum.into(%{})
   end
 
@@ -145,12 +147,14 @@ defmodule EctoTurbo.Utils do
     do:
       raise(ArgumentError, message: "expecting a map or a list, got: #{inspect(not_map_or_list)}")
 
+  @doc false
+  @spec compactify!(boolean(), list()) :: list()
   def compactify!(true, list), do: Enum.reject(list, fn {_k, v} -> is_nil(v) end)
 
   def compactify!(false, list), do: Enum.reject(list, fn elem -> is_nil(elem) end)
 
-  defp empty_map(map),
+  defp empty_map?(map),
     do: is_map(map) && not Map.has_key?(map, :__struct__) && Enum.empty?(map)
 
-  defp is_empty_string(s), do: s == ""
+  defp empty_string?(s), do: s == ""
 end

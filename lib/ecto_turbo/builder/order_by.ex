@@ -7,7 +7,7 @@ defmodule EctoTurbo.Builder.OrderBy do
   Builds a quoted order_by expression.
   """
   # sobelow_skip ["RCE.CodeModule"]
-  @spec build(Macro.t(), [Macro.t()], [Macro.t()]) :: Macro.t()
+  @spec build(Ecto.Queryable.t(), list(), list()) :: Ecto.Query.t()
   def build(query, sorts, binding) do
     query
     |> Macro.escape()

@@ -3,6 +3,9 @@ defmodule EctoTurbo.DataCase do
 
   use ExUnit.CaseTemplate
 
+  alias Ecto.Adapters.SQL.Sandbox
+  alias EctoTurbo.TestRepo
+
   using do
     quote do
       import EctoTurbo.TestFactory
@@ -10,6 +13,6 @@ defmodule EctoTurbo.DataCase do
   end
 
   setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(EctoTurbo.TestRepo)
+    :ok = Sandbox.checkout(TestRepo)
   end
 end

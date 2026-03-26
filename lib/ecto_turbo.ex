@@ -46,8 +46,8 @@ defmodule EctoTurbo do
 
   import Ecto.Query, only: [exclude: 2]
 
-  alias EctoTurbo.Config, as: TConfig
   alias EctoTurbo.{Builder, Utils}
+  alias EctoTurbo.Config, as: TConfig
   alias EctoTurbo.Hooks.Paginate
 
   @doc """
@@ -118,7 +118,7 @@ defmodule EctoTurbo do
   defp handle_query(queryable, opts) do
     case Keyword.get(opts, :repo) do
       nil -> raise "Expected key `repo` in `opts`, got #{inspect(opts)}"
-      repo -> apply(repo, :all, [queryable])
+      repo -> repo.all(queryable)
     end
   end
 end

@@ -3,11 +3,12 @@ defmodule EctoTurbo.Builder.Where do
 
   alias Ecto.Query.Builder.Filter
   alias EctoTurbo.Hooks.Search
-  alias Search.Condition
   alias EctoTurbo.Services.BuildSearchQuery
+  alias Search.Condition
 
   @doc false
   # sobelow_skip ["RCE.CodeModule"]
+  @spec build(Ecto.Query.t(), Search.t(), [Macro.t()]) :: Ecto.Query.t()
   def build(query, %Search{combinator: combinator} = grouping, binding)
       when combinator in ~w(and or)a do
     exprs = grouping |> List.wrap() |> groupings_expr()

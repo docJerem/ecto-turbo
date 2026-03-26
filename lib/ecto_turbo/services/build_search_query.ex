@@ -76,6 +76,8 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
     "FALSE"
   ]
 
+  @doc false
+  @spec search_types() :: [String.t()]
   def search_types, do: @search_types
 
   @doc """
@@ -313,7 +315,7 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
 
   """
 
-  @spec handle_expr(atom(), %Attribute{}, list()) :: tuple()
+  @spec handle_expr(atom(), Attribute.t(), list()) :: tuple()
   def handle_expr(:eq, attribute, [value | _]) do
     quote(do: unquote(field_expr(attribute)) == ^unquote(value))
   end

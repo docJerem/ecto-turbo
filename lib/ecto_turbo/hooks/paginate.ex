@@ -65,6 +65,8 @@ defmodule EctoTurbo.Hooks.Paginate do
     end
   end
 
+  @doc false
+  @spec do_get_paginate(Ecto.Query.t(), map(), module()) :: map()
   def do_get_paginate(queryable, formated_params, repo) do
     per_page = Map.get(formated_params, :per_page)
     total_count = get_total_count(queryable, repo)
@@ -102,7 +104,6 @@ defmodule EctoTurbo.Hooks.Paginate do
   end
 
   defp get_count(query, repo) do
-    repo
-    |> apply(:aggregate, [query, :count, :id])
+    repo.aggregate(query, :count, :id)
   end
 end

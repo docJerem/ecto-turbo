@@ -9,7 +9,7 @@ defmodule EctoTurboTest do
   alias EctoTurbo, as: TE
   alias EctoTurbo.Schemas.Post
 
-  def post_fixture() do
+  def post_fixture do
     insert(:post,
       name: "post-name-1",
       price: 10,
@@ -220,7 +220,7 @@ defmodule EctoTurboTest do
 
       post_fixture()
       %{data: data} = do_run_search(filter)
-      assert length(data) == 0
+      assert data == []
     end
 
     test "When search_types is :is_null" do

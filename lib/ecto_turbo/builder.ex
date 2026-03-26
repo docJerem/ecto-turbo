@@ -1,8 +1,8 @@
 defmodule EctoTurbo.Builder do
   @moduledoc false
 
-  alias EctoTurbo.Builder.{Join, Where, OrderBy, LimitOffset}
-  alias EctoTurbo.Hooks.{Search, Sort, Paginate}
+  alias EctoTurbo.Builder.{Join, LimitOffset, OrderBy, Where}
+  alias EctoTurbo.Hooks.{Paginate, Search, Sort}
   alias EctoTurbo.Utils
 
   @doc """
@@ -149,6 +149,7 @@ defmodule EctoTurbo.Builder do
     acc
   end
 
+  @doc false
   @spec extract_schema(map() | Ecto.Query.t()) :: Ecto.Query.t()
   def extract_schema(%{from: %{source: %{query: subquery}}}), do: extract_schema(subquery)
   def extract_schema(%{from: %{source: {_, schema}}}), do: schema

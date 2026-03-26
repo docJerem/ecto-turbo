@@ -1,8 +1,8 @@
 defmodule EctoTurbo.Hooks.Sort do
   @moduledoc false
 
-  alias EctoTurbo.Hooks.Sort
   alias EctoTurbo.Hooks.Search.Attribute
+  alias EctoTurbo.Hooks.Sort
 
   defstruct attribute: nil, direction: nil
 
@@ -80,8 +80,9 @@ defmodule EctoTurbo.Hooks.Sort do
     |> result()
   end
 
-  # Used to avoid crash due to missing atom
-  def data(), do: @atom
+  @doc false
+  @spec data() :: atom()
+  def data, do: @atom
 
   defp handle_sort(value, schema) when is_binary(value) do
     value

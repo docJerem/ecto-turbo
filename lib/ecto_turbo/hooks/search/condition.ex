@@ -1,13 +1,15 @@
 defmodule EctoTurbo.Hooks.Search.Condition do
   @moduledoc false
 
-  alias EctoTurbo.Hooks.Search.{Condition, Attribute}
+  alias EctoTurbo.Hooks.Search.{Attribute, Condition}
   alias EctoTurbo.Services.BuildSearchQuery
 
   defstruct values: nil, attributes: nil, search_type: nil, combinator: nil
 
   @type t :: %__MODULE__{}
 
+  @doc false
+  @spec extract(String.t(), any(), module()) :: t() | {:error, atom()}
   def extract(key, values, module) do
     with attributes <- extract_attributes(key, module),
          search_type <- get_search_type(key),
