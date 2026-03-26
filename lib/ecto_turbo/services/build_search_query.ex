@@ -2,7 +2,7 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   @moduledoc """
   `EctoTurbo.Services.BuildSearchQuery` is a service module which serves the search hook.
 
-  `@search_types` is a collection of all the 8 valid `search_types` that come shipped with
+  `@search_types` is a collection of all the valid `search_types` that come shipped with
   `EctoTurbo`'s default search hook. The types are:
 
   * [x] `eq`: equal. (SQL: `col = 'value'`)
@@ -30,6 +30,8 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   * [x] `not_end_with` (SQL: col not like '%value')
   * [x] `between`: between begin and end. (SQL: begin <= col and col <= end)
   """
+
+  import Ecto.Query
 
   alias EctoTurbo.Hooks.Search.Attribute
 
@@ -80,392 +82,223 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   @spec search_types() :: [String.t()]
   def search_types, do: @search_types
 
+  # Generate field_dynamic/2 helpers for binding positions 0-5.
+  # Position 0 is the main query, 1+ are joins.
+  @doc false
+  @spec field_dynamic(non_neg_integer(), atom()) :: Ecto.Query.dynamic_expr()
+  def field_dynamic(0, name), do: dynamic([q], field(q, ^name))
+  def field_dynamic(1, name), do: dynamic([_, b1], field(b1, ^name))
+  def field_dynamic(2, name), do: dynamic([_, _, b2], field(b2, ^name))
+  def field_dynamic(3, name), do: dynamic([_, _, _, b3], field(b3, ^name))
+  def field_dynamic(4, name), do: dynamic([_, _, _, _, b4], field(b4, ^name))
+  def field_dynamic(5, name), do: dynamic([_, _, _, _, _, b5], field(b5, ^name))
+
   @doc """
-  ## Examples
-
-
-
-  When `search_type` is `:eq`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:eq, %Attribute{name: :price, parent: :query}, ["10"])
-      {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:not_eq`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_eq, %Attribute{name: :price, parent: :query}, ["10"])
-      {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:lt`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:lt, %Attribute{name: :price, parent: :query}, ["10"])
-      {:<, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:lteq`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:lteq, %Attribute{name: :price, parent: :query}, ["10"])
-      {:<=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:gt`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:gt, %Attribute{name: :price, parent: :query}, ["10"])
-      {:>, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:gteq`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:gteq, %Attribute{name: :price, parent: :query}, ["10"])
-      {:>=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["10"]}]}
-
-  When `search_type` is `:like`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:like, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:like, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir%"]}
-
-  When `search_type` is `:not_like`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_like, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:like, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir%"]}]}
-
-  When `search_type` is `:ilike`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:ilike, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir%"]}
-
-  When `search_type` is `:not_ilike`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_ilike, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir%"]}]}
-
-  When `search_type` is `:in`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:in, %Attribute{name: :price, parent: :query}, ["10", "20"])
-      {:in, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [["10", "20"]]}]}
-
-  When `search_type` is `:not_in`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_in, %Attribute{name: :price, parent: :query}, ["10", "20"])
-      {
-        :not,
-        [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]],
-        [{:in, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [["10", "20"]]}]}]
-      }
-
-  When `search_type` is `:start_with`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:start_with, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "elixir%"]}
-
-  When `search_type` is `:not_start_with`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_start_with, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "elixir%"]}]}
-
-  When `search_type` is `:end_with`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:end_with, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir"]}
-
-  When `search_type` is `:not_end_with`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:not_end_with, %Attribute{name: :title, parent: :query}, ["elixir"])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:ilike, [], [{:field, [], [{:query, [], Elixir}, :title]}, "%elixir"]}]}
-
-  When `search_type` is `:is_true`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_true, %Attribute{name: :available, parent: :query}, [true])
-      {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [true]}]}
-      iex> BuildSearchQuery.handle_expr(:is_true, %Attribute{name: :available, parent: :query}, [false])
-      {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [true]}]}
-
-  When `search_type` is `:is_not_true`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_not_true, %Attribute{name: :available, parent: :query}, [true])
-      {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [false]}]}
-      iex> BuildSearchQuery.handle_expr(:is_not_true, %Attribute{name: :available, parent: :query}, [false])
-      {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [false]}]}
-
-  When `search_type` is `:is_false`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_false, %Attribute{name: :price, parent: :query}, [true])
-      {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [false]}]}
-      iex> BuildSearchQuery.handle_expr(:is_false, %Attribute{name: :price, parent: :query}, [false])
-      {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [false]}]}
-
-  When `search_type` is `:is_not_false`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_not_false, %Attribute{name: :price, parent: :query}, [true])
-      {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [false]}]}
-      iex> BuildSearchQuery.handle_expr(:is_not_false, %Attribute{name: :price, parent: :query}, [false])
-      {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], [false]}]}
-
-  When `search_type` is `:is_null`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_null, %Attribute{name: :available, parent: :query}, [true])
-      {:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}
-      iex> BuildSearchQuery.handle_expr(:is_null, %Attribute{name: :available, parent: :query}, [false])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}]}
-
-  When `search_type` is `:is_not_null`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_not_null, %Attribute{name: :available, parent: :query}, [true])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}]}
-      iex> BuildSearchQuery.handle_expr(:is_not_null, %Attribute{name: :available, parent: :query}, [false])
-      {:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}]}
-
-  When `search_type` is `:is_present`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_present, %Attribute{name: :available, parent: :query}, [true])
-      {
-              :not,
-              [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]],
-              [{:or, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}, {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [""]}]}]}]
-            }
-      iex> BuildSearchQuery.handle_expr(:is_present, %Attribute{name: :available, parent: :query}, [false])
-      {
-              :or,
-              [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]],
-              [{:not, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}]}, {:!=, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [""]}]}]
-            }
-
-  When `search_type` is `:is_blank`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:is_blank, %Attribute{name: :available, parent: :query}, [true])
-      {:or, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:is_nil, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}]}, {:==, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:field, [], [{:query, [], Elixir}, :available]}, {:^, [], [""]}]}]}
-      iex> BuildSearchQuery.handle_expr(:is_blank, %Attribute{name: :available, parent: :query}, [false])
-      {:or,
-             [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]],
-             [
-               {:not,
-                [context: EctoTurbo.Services.BuildSearchQuery, imports: [{1, Kernel}]],
-                [
-                  {:is_nil,
-                   [
-                     context: EctoTurbo.Services.BuildSearchQuery,
-                     imports: [{1, Kernel}]
-                   ], [{:field, [], [{:query, [], Elixir}, :available]}]}
-                ]},
-               {:!=,
-                [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]],
-                [
-                  {:field, [], [{:query, [], Elixir}, :available]},
-                  {:^, [], [""]}
-                ]}
-             ]}
-
-  When `search_type` is `:between`:
-
-      iex> alias EctoTurbo.Services.BuildSearchQuery
-      iex> alias EctoTurbo.Hooks.Search.Attribute
-      iex> BuildSearchQuery.handle_expr(:between, %Attribute{name: :price, parent: :query}, ["10", "20"])
-      {
-        :and,
-        [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]],
-        [
-          {:<, [context: EctoTurbo.Services.BuildSearchQuery, imports: [{2, Kernel}]], [{:^, [], ["10"]}, {:field, [], [{:query, [], Elixir}, :price]}]},
-          {:<, [{:context, EctoTurbo.Services.BuildSearchQuery}, {:imports, [{2, Kernel}]}], [{:field, [], [{:query, [], Elixir}, :price]}, {:^, [], ["20"]}]}
-        ]
-      }
-
+  Builds a dynamic expression for the given search type, attribute and values.
   """
+  @spec handle_expr(atom(), Attribute.t(), list(), [atom()]) :: Ecto.Query.dynamic_expr()
+  def handle_expr(search_type, attribute, values, binding_keys \\ [:query])
 
-  @spec handle_expr(atom(), Attribute.t(), list()) :: tuple()
-  def handle_expr(:eq, attribute, [value | _]) do
-    quote(do: unquote(field_expr(attribute)) == ^unquote(value))
+  def handle_expr(:eq, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f == ^value)
   end
 
-  def handle_expr(:not_eq, attribute, [value | _]) do
-    quote do: unquote(field_expr(attribute)) != ^unquote(value)
+  def handle_expr(:not_eq, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f != ^value)
   end
 
-  def handle_expr(:ilike, attribute, [value | _]) do
-    quote do: ilike(unquote(field_expr(attribute)), unquote("%#{value}%"))
+  def handle_expr(:lt, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f < ^value)
   end
 
-  def handle_expr(:not_ilike, attribute, [value | _]) do
-    quote do: not ilike(unquote(field_expr(attribute)), unquote("%#{value}%"))
+  def handle_expr(:lteq, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f <= ^value)
   end
 
-  def handle_expr(:lt, attribute, [value | _]) do
-    quote do: unquote(field_expr(attribute)) < ^unquote(value)
+  def handle_expr(:gt, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f > ^value)
   end
 
-  def handle_expr(:lteq, attribute, [value | _]) do
-    quote do: unquote(field_expr(attribute)) <= ^unquote(value)
+  def handle_expr(:gteq, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f >= ^value)
   end
 
-  def handle_expr(:gt, attribute, [value | _]) do
-    quote do: unquote(field_expr(attribute)) > ^unquote(value)
+  def handle_expr(:like, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}%"
+    dynamic(like(^f, ^pattern))
   end
 
-  def handle_expr(:gteq, attribute, [value | _]) do
-    quote do: unquote(field_expr(attribute)) >= ^unquote(value)
+  def handle_expr(:not_like, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}%"
+    dynamic(not like(^f, ^pattern))
   end
 
-  def handle_expr(:is_true, attribute, [value | _]) when value in @true_values do
-    handle_expr(:eq, attribute, [true])
+  def handle_expr(:ilike, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}%"
+    dynamic(ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_true, attribute, [value | _]) when value in @false_values do
-    handle_expr(:not_eq, attribute, [true])
+  def handle_expr(:not_ilike, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}%"
+    dynamic(not ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_not_true, attribute, [value | _]) when value in @true_values do
-    handle_expr(:eq, attribute, [false])
+  def handle_expr(:in, attribute, values, binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f in ^values)
   end
 
-  def handle_expr(:is_not_true, attribute, [value | _]) when value in @false_values do
-    handle_expr(:not_eq, attribute, [false])
+  def handle_expr(:not_in, attribute, values, binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(^f not in ^values)
   end
 
-  def handle_expr(:is_false, attribute, [value | _]) when value in @true_values do
-    handle_expr(:eq, attribute, [false])
+  def handle_expr(:start_with, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "#{value}%"
+    dynamic(ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_false, attribute, [value | _]) when value in @false_values do
-    handle_expr(:not_eq, attribute, [false])
+  def handle_expr(:not_start_with, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "#{value}%"
+    dynamic(not ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_not_false, attribute, [value | _]) when value in @true_values do
-    handle_expr(:not_eq, attribute, [false])
+  def handle_expr(:end_with, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}"
+    dynamic(ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_not_false, attribute, [value | _]) when value in @false_values do
-    handle_expr(:eq, attribute, [false])
+  def handle_expr(:not_end_with, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    pattern = "%#{value}"
+    dynamic(not ilike(^f, ^pattern))
   end
 
-  def handle_expr(:is_present, attribute, [value | _] = values) when value in @true_values do
-    quote(do: not unquote(handle_expr(:is_blank, attribute, values)))
+  def handle_expr(:is_true, attribute, [value | _], binding_keys) when value in @true_values do
+    handle_expr(:eq, attribute, [true], binding_keys)
   end
 
-  def handle_expr(:is_present, attribute, [value | _] = values) when value in @false_values do
-    quote(do: unquote(handle_expr(:is_blank, attribute, values)))
+  def handle_expr(:is_true, attribute, [value | _], binding_keys) when value in @false_values do
+    handle_expr(:not_eq, attribute, [true], binding_keys)
   end
 
-  def handle_expr(:is_blank, attribute, [value | _]) when value in @true_values do
-    quote(do: is_nil(unquote(field_expr(attribute))) or unquote(field_expr(attribute)) == ^"")
+  def handle_expr(:is_not_true, attribute, [value | _], binding_keys)
+      when value in @true_values do
+    handle_expr(:eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:is_blank, attribute, [value | _]) when value in @false_values do
-    quote(do: not is_nil(unquote(field_expr(attribute))) or unquote(field_expr(attribute)) != ^"")
+  def handle_expr(:is_not_true, attribute, [value | _], binding_keys)
+      when value in @false_values do
+    handle_expr(:not_eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:is_null, attribute, [value | _]) when value in @true_values do
-    quote(do: is_nil(unquote(field_expr(attribute))))
+  def handle_expr(:is_false, attribute, [value | _], binding_keys) when value in @true_values do
+    handle_expr(:eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:is_null, attribute, [value | _]) when value in @false_values do
-    quote(do: not is_nil(unquote(field_expr(attribute))))
+  def handle_expr(:is_false, attribute, [value | _], binding_keys) when value in @false_values do
+    handle_expr(:not_eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:is_not_null, attribute, [value | _] = values) when value in @true_values do
-    quote(do: not unquote(handle_expr(:is_null, attribute, values)))
+  def handle_expr(:is_not_false, attribute, [value | _], binding_keys)
+      when value in @true_values do
+    handle_expr(:not_eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:is_not_null, attribute, [value | _] = values) when value in @false_values do
-    quote(do: unquote(handle_expr(:is_null, attribute, values)))
+  def handle_expr(:is_not_false, attribute, [value | _], binding_keys)
+      when value in @false_values do
+    handle_expr(:eq, attribute, [false], binding_keys)
   end
 
-  def handle_expr(:like, attribute, [value | _]) do
-    quote do: like(unquote(field_expr(attribute)), unquote("%#{value}%"))
+  def handle_expr(:is_null, attribute, [value | _], binding_keys) when value in @true_values do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(is_nil(^f))
   end
 
-  def handle_expr(:not_like, attribute, [value | _]) do
-    quote do: not like(unquote(field_expr(attribute)), unquote("%#{value}%"))
+  def handle_expr(:is_null, attribute, [value | _], binding_keys) when value in @false_values do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(not is_nil(^f))
   end
 
-  def handle_expr(:in, attribute, values) do
-    quote do: unquote(field_expr(attribute)) in ^unquote(values)
+  def handle_expr(:is_not_null, attribute, [value | _] = values, binding_keys)
+      when value in @true_values do
+    is_null_dyn = handle_expr(:is_null, attribute, values, binding_keys)
+    dynamic(not (^is_null_dyn))
   end
 
-  def handle_expr(:not_in, attribute, values) do
-    quote do: unquote(field_expr(attribute)) not in ^unquote(values)
+  def handle_expr(:is_not_null, attribute, [value | _] = values, binding_keys)
+      when value in @false_values do
+    handle_expr(:is_null, attribute, values, binding_keys)
   end
 
-  def handle_expr(:matches, attribute, [value | _]) do
-    quote do: ilike(unquote(field_expr(attribute)), ^unquote(value))
+  def handle_expr(:is_blank, attribute, [value | _], binding_keys) when value in @true_values do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(is_nil(^f) or ^f == ^"")
   end
 
-  def handle_expr(:does_not_match, attribute, [value | _]) do
-    quote do: not ilike(unquote(field_expr(attribute)), ^unquote(value))
+  def handle_expr(:is_blank, attribute, [value | _], binding_keys) when value in @false_values do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(not is_nil(^f) or ^f != ^"")
   end
 
-  def handle_expr(:start_with, attribute, [value | _]) do
-    quote do: ilike(unquote(field_expr(attribute)), unquote("#{value}%"))
+  def handle_expr(:is_present, attribute, [value | _] = values, binding_keys)
+      when value in @true_values do
+    blank_dyn = handle_expr(:is_blank, attribute, values, binding_keys)
+    dynamic(not (^blank_dyn))
   end
 
-  def handle_expr(:not_start_with, attribute, [value | _]) do
-    quote do: not ilike(unquote(field_expr(attribute)), unquote("#{value}%"))
+  def handle_expr(:is_present, attribute, [value | _] = values, binding_keys)
+      when value in @false_values do
+    handle_expr(:is_blank, attribute, values, binding_keys)
   end
 
-  def handle_expr(:end_with, attribute, [value | _]) do
-    quote do: ilike(unquote(field_expr(attribute)), unquote("%#{value}"))
+  def handle_expr(:matches, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(ilike(^f, ^value))
   end
 
-  def handle_expr(:not_end_with, attribute, [value | _]) do
-    quote do: not ilike(unquote(field_expr(attribute)), unquote("%#{value}"))
+  def handle_expr(:does_not_match, attribute, [value | _], binding_keys) do
+    f = field_dyn(attribute, binding_keys)
+    dynamic(not ilike(^f, ^value))
   end
 
-  def handle_expr(:between, attribute, [hd | last] = values) when length(values) == 2 do
-    quote(
-      do:
-        ^unquote(hd) < unquote(field_expr(attribute)) and
-          unquote(field_expr(attribute)) < ^unquote(hd(last))
-    )
+  def handle_expr(:between, attribute, [hd_val | last] = values, binding_keys)
+      when length(values) == 2 do
+    f = field_dyn(attribute, binding_keys)
+    tl_val = hd(last)
+    dynamic(^hd_val < ^f and ^f < ^tl_val)
   end
 
-  def handle_expr(:between, attribute, [value | _]) when is_binary(value) do
-    result = String.split(value, "..")
-    handle_expr(:between, attribute, result)
+  def handle_expr(:between, attribute, [value | _], binding_keys) when is_binary(value) do
+    result = value |> String.split("..") |> Enum.map(&maybe_to_number/1)
+    handle_expr(:between, attribute, result, binding_keys)
   end
 
-  defp field_expr(%Attribute{name: name, parent: parent}) do
-    quote do: field(unquote(Macro.var(parent, Elixir)), unquote(name))
+  defp maybe_to_number(str) when is_binary(str) do
+    case Float.parse(str) do
+      {num, ""} -> num
+      _ -> str
+    end
+  end
+
+  defp maybe_to_number(val), do: val
+
+  # Resolves an attribute to a dynamic field expression at the correct binding position
+  defp field_dyn(%Attribute{name: name, parent: parent}, binding_keys) do
+    pos = Enum.find_index(binding_keys, &(&1 == parent)) || 0
+    field_dynamic(pos, name)
   end
 end

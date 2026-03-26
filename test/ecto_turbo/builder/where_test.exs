@@ -85,28 +85,28 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string([condition([attr(:name)], :like, ["elixir"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, ^\"%elixir%\")>"
     end
 
     test "not_like search type" do
       query = build_query_string([condition([attr(:name)], :not_like, ["elixir"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, \"%elixir%\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, ^\"%elixir%\")>"
     end
 
     test "ilike search type" do
       query = build_query_string([condition([attr(:name)], :ilike, ["elixir"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%elixir%\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"%elixir%\")>"
     end
 
     test "not_ilike search type" do
       query = build_query_string([condition([attr(:name)], :not_ilike, ["elixir"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%elixir%\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, ^\"%elixir%\")>"
     end
 
     test "in search type" do
@@ -127,14 +127,14 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string([condition([attr(:name)], :start_with, ["post"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"post%\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"post%\")>"
     end
 
     test "end_with search type" do
       query = build_query_string([condition([attr(:name)], :end_with, ["post"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post\")>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"%post\")>"
     end
 
     test "is_null search type with true" do
@@ -183,7 +183,7 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string(conditions, :and)
 
       assert query =~ "p0.price == ^100"
-      assert query =~ "like(p0.name, \"%elixir%\")"
+      assert query =~ "like(p0.name, ^\"%elixir%\")"
     end
 
     test "three AND conditions" do
@@ -196,7 +196,7 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string(conditions, :and)
 
       assert query =~ "p0.price > ^10"
-      assert query =~ "like(p0.name, \"%post%\")"
+      assert query =~ "like(p0.name, ^\"%post%\")"
       assert query =~ "p0.available == ^true"
     end
   end
@@ -213,7 +213,7 @@ defmodule EctoTurbo.Builder.WhereTest do
 
       query = build_query_string([cond_or])
 
-      assert query =~ "like(p0.name, \"%elixir%\") or like(p0.body, \"%elixir%\")"
+      assert query =~ "like(p0.name, ^\"%elixir%\") or like(p0.body, ^\"%elixir%\")"
     end
   end
 
@@ -228,7 +228,7 @@ defmodule EctoTurbo.Builder.WhereTest do
         |> Where.build(search_struct, query_with_join_binding())
         |> Macro.to_string()
 
-      assert query =~ "like(c1.name, \"%tech%\")"
+      assert query =~ "like(c1.name, ^\"%tech%\")"
     end
 
     test "where on mixed main and association fields" do
@@ -263,7 +263,7 @@ defmodule EctoTurbo.Builder.WhereTest do
         |> Where.build(search_struct, query_with_join_binding())
         |> Macro.to_string()
 
-      assert query =~ "like(p0.name, \"%elixir%\") or like(c1.name, \"%elixir%\")"
+      assert query =~ "like(p0.name, ^\"%elixir%\") or like(c1.name, ^\"%elixir%\")"
     end
   end
 

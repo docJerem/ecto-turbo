@@ -238,7 +238,7 @@ defmodule EctoTurboTest do
       filter = %{"name_like" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, ^\"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -249,7 +249,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_like" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, ^\"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -260,7 +260,7 @@ defmodule EctoTurboTest do
       filter = %{"name_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -271,7 +271,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, ^\"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -304,7 +304,7 @@ defmodule EctoTurboTest do
       filter = %{"name_start_with" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -315,7 +315,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, ^\"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(%{"name_not_start_with" => "post-name-1"})
@@ -326,7 +326,7 @@ defmodule EctoTurboTest do
       filter = %{"name_end_with" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^\"%post-name-1\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -337,7 +337,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_end_with" => "post-name-2"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-2\"), limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, ^\"%post-name-2\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)

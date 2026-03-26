@@ -1,83 +1,103 @@
 defmodule EctoTurbo.Builder.Where do
   @moduledoc false
 
-  alias Ecto.Query.Builder.Filter
+  import Ecto.Query
+
   alias EctoTurbo.Hooks.Search
   alias EctoTurbo.Services.BuildSearchQuery
   alias Search.Condition
 
   @doc false
-  # sobelow_skip ["RCE.CodeModule"]
-  @spec build(Ecto.Query.t(), Search.t(), [Macro.t()]) :: Ecto.Query.t()
+  @spec build(Ecto.Queryable.t(), Search.t(), term()) :: Ecto.Query.t()
   def build(query, %Search{combinator: combinator} = grouping, binding)
       when combinator in ~w(and or)a do
-    exprs = grouping |> List.wrap() |> groupings_expr()
-
-    :where
-    |> Filter.build(combinator, Macro.escape(query), binding, exprs, __ENV__)
-    |> Code.eval_quoted()
-    |> elem(0)
+    binding_keys = extract_binding_keys(binding)
+    dyn = grouping |> List.wrap() |> groupings_dynamic(binding_keys)
+    where(query, ^dyn)
   end
 
-  defp grouping_expr(%Search{conditions: []}) do
-    []
+  defp extract_binding_keys(binding) when is_list(binding) do
+    Enum.map(binding, fn
+      {name, _, _} -> name
+      other -> other
+    end)
   end
 
-  defp grouping_expr(%Search{combinator: combinator, conditions: conditions}) do
-    conditions |> Enum.map(&condition_expr/1) |> combinator_expr(combinator)
+  defp grouping_dynamic(%Search{conditions: []}, binding_keys: _binding_keys) do
+    dynamic(true)
   end
 
-  defp condition_expr(%Condition{
-         attributes: attrs,
-         values: vals,
-         search_type: search_type,
-         combinator: combinator
-       }) do
+  defp grouping_dynamic(%Search{combinator: combinator, conditions: conditions},
+         binding_keys: binding_keys
+       ) do
+    conditions
+    |> Enum.map(&condition_dynamic(&1, binding_keys))
+    |> combine_dynamics(combinator)
+  end
+
+  defp condition_dynamic(
+         %Condition{
+           attributes: attrs,
+           values: vals,
+           search_type: search_type,
+           combinator: combinator
+         },
+         binding_keys
+       ) do
     attrs
-    |> Enum.map(&BuildSearchQuery.handle_expr(search_type, &1, vals))
-    |> combinator_expr(combinator)
+    |> Enum.map(&BuildSearchQuery.handle_expr(search_type, &1, vals, binding_keys))
+    |> combine_dynamics(combinator)
   end
 
-  defp groupings_expr(groupings), do: groupings_expr(groupings, [], nil)
-  defp groupings_expr([%{groupings: []} = parent], [], nil), do: grouping_expr(parent)
+  defp groupings_dynamic(groupings, binding_keys),
+    do: groupings_dynamic(groupings, binding_keys, [], nil)
 
-  defp groupings_expr([%{groupings: []} = parent | tail], acc, combinator_acc) do
-    groupings_expr(tail, acc ++ [grouping_expr(parent)], combinator_acc)
+  defp groupings_dynamic([%{groupings: []} = parent], binding_keys, [], nil),
+    do: grouping_dynamic(parent, binding_keys: binding_keys)
+
+  defp groupings_dynamic([%{groupings: []} = parent | tail], binding_keys, acc, combinator_acc) do
+    groupings_dynamic(
+      tail,
+      binding_keys,
+      acc ++ [grouping_dynamic(parent, binding_keys: binding_keys)],
+      combinator_acc
+    )
   end
 
-  defp groupings_expr(
+  defp groupings_dynamic(
          [%{combinator: combinator, groupings: children} = parent | tail],
+         binding_keys,
          acc,
          combinator_acc
        ) do
-    children_exprs = groupings_expr(children, acc ++ [grouping_expr(parent)], combinator)
-    groupings_expr(tail, children_exprs, combinator_acc)
-  end
-
-  defp groupings_expr([], acc, nil), do: acc
-  defp groupings_expr([], acc, combinator), do: combinator_expr(acc, combinator)
-
-  defp combinator_expr(exprs, combinator, acc \\ [])
-
-  defp combinator_expr([first_expr, second_expr | tail], combinator, acc) do
-    tail_exprs =
-      combinator_expr(
-        tail,
-        combinator,
-        quote do
-          unquote(combinator)(unquote_splicing([first_expr, second_expr]))
-        end
+    children_exprs =
+      groupings_dynamic(
+        children,
+        binding_keys,
+        acc ++ [grouping_dynamic(parent, binding_keys: binding_keys)],
+        combinator
       )
 
-    combinator_expr([tail_exprs], combinator, acc)
+    groupings_dynamic(tail, binding_keys, children_exprs, combinator_acc)
   end
 
-  defp combinator_expr([expr], _combinator, []),
-    do: expr
+  defp groupings_dynamic([], _binding_keys, acc, nil), do: acc
 
-  defp combinator_expr([expr], combinator, acc),
-    do: quote(do: unquote(combinator)(unquote(expr), unquote(acc)))
+  defp groupings_dynamic([], _binding_keys, acc, combinator),
+    do: combine_dynamics(acc, combinator)
 
-  defp combinator_expr([], _combinator, acc),
-    do: acc
+  defp combine_dynamics([], _combinator), do: dynamic(true)
+  defp combine_dynamics([single], _combinator), do: single
+
+  defp combine_dynamics([first | rest], :and) do
+    Enum.reduce(rest, first, fn expr, acc ->
+      dynamic(^acc and ^expr)
+    end)
+  end
+
+  defp combine_dynamics([first | rest], :or) do
+    Enum.reduce(rest, first, fn expr, acc ->
+      dynamic(^acc or ^expr)
+    end)
+  end
 end
