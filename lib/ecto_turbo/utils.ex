@@ -29,6 +29,7 @@ defmodule EctoTurbo.Utils do
     end)
   end
 
+  defp map_atom_put(m, "data", v), do: Map.put(m, :data, v)
   defp map_atom_put(m, "paginate", v), do: Map.put(m, :paginate, v)
 
   defp map_atom_put(m, k, v) do

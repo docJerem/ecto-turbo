@@ -23,7 +23,7 @@ end
 config :ecto_turbo, EctoTurbo,
   repo: MyApp.Repo,
   per_page: 10,
-  entry_name: "datas",
+  entry_name: "data",
   paginate_name: "paginate"
 ```
 
@@ -32,7 +32,7 @@ config :ecto_turbo, EctoTurbo,
 ### Basic Query with Pagination
 
 ```elixir
-# Returns %{datas: [...], paginate: %{...}}
+# Returns %{data: [...], paginate: %{...}}
 EctoTurbo.turbo(Post, %{"page" => 1, "per_page" => 20})
 ```
 

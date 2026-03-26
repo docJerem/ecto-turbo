@@ -6,7 +6,7 @@ defmodule EctoTurbo.Hooks.Sort do
 
   defstruct attribute: nil, direction: nil
 
-  @atom :datas
+  @atom :data
   @type t :: %__MODULE__{}
   @sort_order ~w(asc desc)
 
@@ -81,7 +81,7 @@ defmodule EctoTurbo.Hooks.Sort do
   end
 
   # Used to avoid crash due to missing atom
-  def datas(), do: @atom
+  def data(), do: @atom
 
   defp handle_sort(value, schema) when is_binary(value) do
     value

@@ -14,7 +14,8 @@ Initial release as `ecto_turbo`, a consolidated fork of [turbo_ecto](https://git
 - Simplified `not_in` syntax to use native `not in` operator
 - Updated charlist literals to modern `~c` sigil syntax
 - Added sobelow security scanner skip directives
-- Added `datas()` helper function for atom pre-registration
+- Changed default `entry_name` from `"datas"` to `"data"` (data is already plural)
+- Added `data()` helper function for atom pre-registration
 - Bumped minimum Elixir to `~> 1.14`
 - Updated dependencies: `ecto_sql ~> 3.11`, `postgrex ~> 0.19`
 - Enforced `warnings_as_errors` at compile time

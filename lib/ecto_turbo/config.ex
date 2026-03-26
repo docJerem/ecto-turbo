@@ -10,7 +10,7 @@ defmodule EctoTurbo.Config do
   end
 
   def entry_name(application \\ :ecto_turbo) do
-    config(:entry_name, "datas", application)
+    config(:entry_name, "data", application)
   end
 
   def paginate_name(application \\ :ecto_turbo) do
