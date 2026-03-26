@@ -135,7 +135,7 @@ defmodule EctoTurboTest do
       filter = %{"price_eq" => 10}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^10, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^10, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -147,7 +147,7 @@ defmodule EctoTurboTest do
       filter = %{"price_not_eq" => 30}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != ^30, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != ^30, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -158,7 +158,7 @@ defmodule EctoTurboTest do
       filter = %{"price_lt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^20, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^20, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -170,7 +170,7 @@ defmodule EctoTurboTest do
       filter = %{"price_lteq" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^20, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^20, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -181,7 +181,7 @@ defmodule EctoTurboTest do
       filter = %{"price_gt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -193,7 +193,7 @@ defmodule EctoTurboTest do
       filter = %{"price_gt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -205,7 +205,7 @@ defmodule EctoTurboTest do
       filter = %{"name_is_present" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not (is_nil(p0.name) or p0.name == ^\"\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not (is_nil(p0.name) or p0.name == ^\"\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -216,7 +216,7 @@ defmodule EctoTurboTest do
       filter = %{"name_is_blank" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: is_nil(p0.name) or p0.name == ^\"\", limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: is_nil(p0.name) or p0.name == ^\"\", limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -227,7 +227,7 @@ defmodule EctoTurboTest do
       filter = %{"replies_count_is_null" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: is_nil(p0.replies_count), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: is_nil(p0.replies_count), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -238,7 +238,7 @@ defmodule EctoTurboTest do
       filter = %{"name_like" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -249,7 +249,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_like" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, \"%post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not like(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -260,7 +260,7 @@ defmodule EctoTurboTest do
       filter = %{"name_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -271,7 +271,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -282,7 +282,7 @@ defmodule EctoTurboTest do
       filter = %{"price_in" => [10, 20]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in ^[10, 20], limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in ^[10, 20], limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -293,7 +293,7 @@ defmodule EctoTurboTest do
       filter = %{"price_not_in" => [10, 20]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in ^[10, 20], limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in ^[10, 20], limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -304,7 +304,7 @@ defmodule EctoTurboTest do
       filter = %{"name_start_with" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -315,7 +315,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_ilike" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-1%\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(%{"name_not_start_with" => "post-name-1"})
@@ -326,7 +326,7 @@ defmodule EctoTurboTest do
       filter = %{"name_end_with" => "post-name-1"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%post-name-1\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -337,7 +337,7 @@ defmodule EctoTurboTest do
       filter = %{"name_not_end_with" => "post-name-2"}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-2\"), limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: not ilike(p0.name, \"%post-name-2\"), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -348,7 +348,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_true" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^true, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^true, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -359,7 +359,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_false" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^false, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^false, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -370,7 +370,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_not_false" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available != ^false, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available != ^false, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -381,7 +381,7 @@ defmodule EctoTurboTest do
       filter = %{"price_between" => [9, 21]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ^9 < p0.price and p0.price < ^21, limit: 10, offset: 0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ^9 < p0.price and p0.price < ^21, limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)

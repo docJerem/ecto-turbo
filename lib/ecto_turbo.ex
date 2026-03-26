@@ -39,7 +39,7 @@ defmodule EctoTurbo do
   ```elixir
 
   iex> EctoTurbo.turboq(EctoTurbo.Schemas.Reply, %{"q" => %{"post_name_or_content_like" => "elixir"}})
-  #Ecto.Query<from r0 in EctoTurbo.Schemas.Reply, join: p1 in assoc(r0, :post), where: like(p1.name, \"%elixir%\") or like(r0.content, \"%elixir%\"), limit: 10, offset: 0>
+  #Ecto.Query<from r0 in EctoTurbo.Schemas.Reply, join: p1 in assoc(r0, :post), where: like(p1.name, \"%elixir%\") or like(r0.content, \"%elixir%\"), limit: ^10, offset: ^0>
   ```
 
   """
@@ -107,7 +107,7 @@ defmodule EctoTurbo do
   ## Example
 
       iex> EctoTurbo.turboq(EctoTurbo.Schemas.Post, %{"q" => %{"name_or_body_like" => "elixir", "a_eq" => ""}, "s" => "updated_at+asc", "per_page" => 5, "page" => 1})
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\") or like(p0.body, \"%elixir%\"), order_by: [asc: p0.updated_at], limit: 5, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\") or like(p0.body, \"%elixir%\"), order_by: [asc: p0.updated_at], limit: ^5, offset: ^0>
 
   """
   @spec turboq(any(), map()) :: Ecto.Query.t()

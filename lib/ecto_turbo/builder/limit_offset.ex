@@ -1,10 +1,10 @@
 defmodule EctoTurbo.Builder.LimitOffset do
   @moduledoc false
 
-  alias Ecto.Query.Builder.LimitOffset
+  import Ecto.Query
 
   @doc """
-  Builds a quoted limit or offset expression.
+  Builds a limit or offset expression.
 
   ## Examples
 
@@ -13,22 +13,22 @@ defmodule EctoTurbo.Builder.LimitOffset do
       iex> query = EctoTurbo.Schemas.Post
       iex> val = 1
       iex> EctoTurbo.Builder.LimitOffset.build(type, query, val, [])
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, limit: 1>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, limit: ^1>
 
   When type is `:offset`:
       iex> type = :offset
       iex> query = EctoTurbo.Schemas.Post
       iex> val = 1
       iex> EctoTurbo.Builder.LimitOffset.build(type, query, val, [])
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, offset: 1>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, offset: ^1>
 
   """
-  # sobelow_skip ["RCE.CodeModule"]
-  @spec build(:limit | :offset, Ecto.Query.t(), integer(), Macro.t()) :: Ecto.Query.t()
-  def build(type, query, val, binding) do
-    type
-    |> LimitOffset.build(Macro.escape(query), binding, val, __ENV__)
-    |> Code.eval_quoted()
-    |> elem(0)
+  @spec build(:limit | :offset, Ecto.Queryable.t(), integer(), term()) :: Ecto.Query.t()
+  def build(:limit, query, val, _binding) do
+    limit(query, ^val)
+  end
+
+  def build(:offset, query, val, _binding) do
+    offset(query, ^val)
   end
 end
