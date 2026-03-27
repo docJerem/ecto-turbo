@@ -15,67 +15,67 @@ defmodule EctoTurbo.Builder do
 
       iex> params = %{"q" => %{"name_like" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\"), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, ^"%elixir%"), limit: ^10, offset: ^0>
 
   When search_type is `:ilike`
 
       iex> params = %{"q" => %{"name_ilike" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, \"%elixir%\"), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ilike(p0.name, ^"%elixir%"), limit: ^10, offset: ^0>
 
   When search_type is `:eq`
 
       iex> params = %{"q" => %{"price_eq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^100, limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^100, limit: ^10, offset: ^0>
 
   When search_type is `:gt`
 
       iex> params = %{"q" => %{"price_gt" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^100, limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^100, limit: ^10, offset: ^0>
 
   When search_type is `:lt`
 
       iex> params = %{"q" => %{"price_lt" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^100, limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^100, limit: ^10, offset: ^0>
 
   When search_type is `:gteq`
 
       iex> params = %{"q" => %{"price_gteq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= ^100, limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= ^100, limit: ^10, offset: ^0>
 
   When search_type is `:lteq`
 
       iex> params = %{"q" => %{"price_lteq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^100, limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^100, limit: ^10, offset: ^0>
 
   when use `and` symbol condition
 
       iex> params = %{"q" => %{"name_and_body_like" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\") and like(p0.body, \"%elixir%\"), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, ^"%elixir%") and like(p0.body, ^"%elixir%"), limit: ^10, offset: ^0>
 
   when use `or` symbol condition
 
       iex> params = %{"q" => %{"name_or_body_like" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, \"%elixir%\") or like(p0.body, \"%elixir%\"), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: like(p0.name, ^"%elixir%") or like(p0.body, ^"%elixir%"), limit: ^10, offset: ^0>
 
   when use `assoc`
 
       iex> params = %{"q" => %{"category_name_like" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, join: c1 in assoc(p0, :category), where: like(c1.name, \"%elixir%\"), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, join: c1 in assoc(p0, :category), where: like(c1.name, ^"%elixir%"), limit: ^10, offset: ^0>
 
   when use `and` && `or` && `assoc` condition
 
       iex> params = %{"q" => %{"category_name_or_name_and_body_like" => "elixir"}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, join: c1 in assoc(p0, :category), where: like(p0.body, \"%elixir%\") or (like(c1.name, \"%elixir%\") or like(p0.name, \"%elixir%\")), limit: 10, offset: 0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, join: c1 in assoc(p0, :category), where: like(c1.name, ^"%elixir%") or like(p0.name, ^"%elixir%") or like(p0.body, ^"%elixir%"), limit: ^10, offset: ^0>
 
   """
   @spec run(Ecto.Query.t(), map()) :: Ecto.Query.t()

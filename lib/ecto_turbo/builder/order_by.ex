@@ -1,27 +1,30 @@
 defmodule EctoTurbo.Builder.OrderBy do
   @moduledoc false
 
-  alias Ecto.Query.Builder.OrderBy
+  import Ecto.Query
+
+  alias EctoTurbo.Services.BuildSearchQuery
 
   @doc """
-  Builds a quoted order_by expression.
+  Builds an order_by expression.
   """
-  # sobelow_skip ["RCE.CodeModule"]
   @spec build(Ecto.Queryable.t(), list(), list()) :: Ecto.Query.t()
   def build(query, sorts, binding) do
-    query
-    |> Macro.escape()
-    |> OrderBy.build(binding, Enum.map(sorts, &expr/1), :append, __ENV__)
-    |> Code.eval_quoted()
-    |> elem(0)
+    binding_keys = extract_binding_keys(binding)
+
+    order_exprs =
+      Enum.map(sorts, fn %{direction: direction, attribute: %{name: name, parent: parent}} ->
+        pos = Enum.find_index(binding_keys, &(&1 == parent)) || 0
+        {direction, BuildSearchQuery.field_dynamic(pos, name)}
+      end)
+
+    order_by(query, ^order_exprs)
   end
 
-  # [
-  #   asc: {:field, [], [{:query, [], Elixir}, :updated_at]},
-  #   desc: {:field, [], [{:query, [], Elixir}, :inserted_at]}
-  # ]
-  defp expr(%{direction: direction, attribute: %{name: name, parent: parent}}) do
-    parent = Macro.var(parent, Elixir)
-    quote do: {unquote(direction), field(unquote(parent), unquote(name))}
+  defp extract_binding_keys(binding) when is_list(binding) do
+    Enum.map(binding, fn
+      {name, _, _} -> name
+      other -> other
+    end)
   end
 end
