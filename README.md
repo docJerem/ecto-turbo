@@ -34,6 +34,17 @@ config :ecto_turbo, EctoTurbo,
 ```elixir
 # Returns %{data: [...], paginate: %{...}}
 EctoTurbo.turbo(Post, %{"page" => 1, "per_page" => 20})
+
+# Pagination payload includes:
+# %{
+#   current_page: 1,
+#   current_pages: [1, 2, 3, "...", 20],
+#   per_page: 20,
+#   total_count: 100,
+#   total_pages: 5,
+#   next_page: 2,
+#   prev_page: nil
+# }
 ```
 
 ### Search

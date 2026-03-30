@@ -85,6 +85,7 @@ defmodule EctoTurbo.Hooks.Paginate do
 
     %{
       current_page: current_page,
+      current_pages: current_pages(current_page, total_pages),
       per_page: per_page,
       total_count: total_count,
       total_pages: total_pages,
@@ -92,6 +93,81 @@ defmodule EctoTurbo.Hooks.Paginate do
       prev_page: prev_page
     }
   end
+
+  @doc """
+  Computes a rendered list of page numbers with `"..."` ellipsis markers
+  for display in pagination controls.
+
+  Limits to a max of 9 visible pages with ellipsis to synthesize the pagination.
+
+  Returns `[1]` when there are no pages or `total_pages` is not positive.
+
+  ## Example
+
+      iex> EctoTurbo.Hooks.Paginate.current_pages(463, 5002)
+      [1, "...", 461, 462, 463, 464, 465, "...", 5002]
+
+  """
+  @spec current_pages(integer(), integer()) :: [integer() | String.t()]
+  def current_pages(_current_page, total_pages) when total_pages <= 0, do: [1]
+
+  def current_pages(current_page, total_pages) do
+    current_page = ensure_current_page(current_page, total_pages)
+
+    create_center_from(current_page)
+    |> filter_center(total_pages)
+    |> include_tree_left(current_page)
+    |> include_tree_right(current_page, total_pages)
+    |> include_left_dots(current_page)
+    |> include_right_dots(current_page, total_pages)
+    |> merge_parts(total_pages)
+    |> handle_one_page()
+  end
+
+  defp ensure_current_page(current, total_pages) do
+    cond do
+      current < 1 -> 1
+      current > total_pages -> total_pages
+      true -> current
+    end
+  end
+
+  defp create_center_from(current),
+    do: [current - 2, current - 1, current, current + 1, current + 2]
+
+  defp filter_center(center, total) do
+    Enum.filter(center, fn p -> p > 1 && p < total end)
+  end
+
+  defp include_tree_left(filtered_center, current) when current == 5 do
+    [2] ++ filtered_center
+  end
+
+  defp include_tree_left(filtered_center, _), do: filtered_center
+
+  defp include_tree_right(filtered_center, current, total) when current == total - 4 do
+    filtered_center ++ [total - 1]
+  end
+
+  defp include_tree_right(filtered_center, _, _), do: filtered_center
+
+  defp include_left_dots(filtered_center, current) when current > 5 do
+    ["..."] ++ filtered_center
+  end
+
+  defp include_left_dots(filtered_center, _), do: filtered_center
+
+  defp include_right_dots(filtered_center, current, total) when current < total - 4 do
+    filtered_center ++ ["..."]
+  end
+
+  defp include_right_dots(filtered_center, _, _), do: filtered_center
+
+  defp merge_parts(filtered_center, total), do: [1] ++ filtered_center ++ [total]
+
+  defp handle_one_page([1, 0]), do: [1]
+  defp handle_one_page([1, 1]), do: [1]
+  defp handle_one_page(result), do: result
 
   defp get_total_count(queryable, repo) do
     queryable

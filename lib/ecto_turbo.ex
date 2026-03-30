@@ -57,7 +57,7 @@ defmodule EctoTurbo do
 
       iex> EctoTurbo.turbo(EctoTurbo.Schemas.Post, %{"q" => %{"name_or_replies_content_like" => "elixir", "price_eq" => 1}, "s" => "updated_at+asc", "per_page" => 5, "page" => 1})
       %{
-        paginate: %{current_page: 1, per_page: 5, next_page: nil, prev_page: nil, total_count: 0, total_pages: 0},
+        paginate: %{current_page: 1, current_pages: [1], per_page: 5, next_page: nil, prev_page: nil, total_count: 0, total_pages: 0},
         data: []
       }
 
