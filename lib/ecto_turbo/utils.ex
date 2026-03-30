@@ -32,7 +32,7 @@ defmodule EctoTurbo.Utils do
   end
 
   defp map_atom_put(m, "data", v), do: Map.put(m, :data, v)
-  defp map_atom_put(m, "paginate", v), do: Map.put(m, :paginate, v)
+  defp map_atom_put(m, "pagination", v), do: Map.put(m, :pagination, v)
 
   defp map_atom_put(m, k, v) do
     if is_binary(k), do: Map.put(m, String.to_existing_atom(k), v), else: Map.put(m, k, v)

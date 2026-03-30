@@ -24,7 +24,7 @@ config :ecto_turbo, EctoTurbo,
   repo: MyApp.Repo,
   per_page: 10,
   entry_name: "data",
-  paginate_name: "paginate"
+  paginate_name: "pagination"
 ```
 
 ## Usage
@@ -32,8 +32,19 @@ config :ecto_turbo, EctoTurbo,
 ### Basic Query with Pagination
 
 ```elixir
-# Returns %{data: [...], paginate: %{...}}
+# Returns %{data: [...], pagination: %{...}}
 EctoTurbo.turbo(Post, %{"page" => 1, "per_page" => 20})
+
+# Pagination payload includes:
+# %{
+#   current_page: 1,
+#   current_pages: [1, 2, 3, "...", 20],
+#   per_page: 20,
+#   total_count: 100,
+#   total_pages: 5,
+#   next_page: 2,
+#   prev_page: nil
+# }
 ```
 
 ### Search
