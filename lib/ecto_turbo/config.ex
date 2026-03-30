@@ -22,7 +22,7 @@ defmodule EctoTurbo.Config do
   @doc false
   @spec paginate_name(atom()) :: String.t()
   def paginate_name(application \\ :ecto_turbo) do
-    config(:paginate_name, "paginate", application)
+    config(:paginate_name, "pagination", application)
   end
 
   @doc false

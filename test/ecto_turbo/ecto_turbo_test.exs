@@ -102,11 +102,11 @@ defmodule EctoTurboTest do
   describe "test with paginate" do
     test "test with params page and per_page" do
       post_fixture()
-      %{data: data, paginate: paginate} = TE.turbo(Post, %{"page" => 2, "per_page" => 1})
+      %{data: data, pagination: pagination} = TE.turbo(Post, %{"page" => 2, "per_page" => 1})
 
       assert length(data) == 1
 
-      assert paginate == %{
+      assert pagination == %{
                current_page: 2,
                current_pages: [1, 2, 3],
                next_page: 3,

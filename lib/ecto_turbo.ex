@@ -57,7 +57,7 @@ defmodule EctoTurbo do
 
       iex> EctoTurbo.turbo(EctoTurbo.Schemas.Post, %{"q" => %{"name_or_replies_content_like" => "elixir", "price_eq" => 1}, "s" => "updated_at+asc", "per_page" => 5, "page" => 1})
       %{
-        paginate: %{current_page: 1, current_pages: [1], per_page: 5, next_page: nil, prev_page: nil, total_count: 0, total_pages: 0},
+        pagination: %{current_page: 1, current_pages: [1], per_page: 5, next_page: nil, prev_page: nil, total_count: 0, total_pages: 0},
         data: []
       }
 
@@ -67,7 +67,7 @@ defmodule EctoTurbo do
     build_opts = uniq_merge(opts, TConfig.defaults())
 
     entry_name = Keyword.get(build_opts, :entry_name, "entries")
-    paginate_name = Keyword.get(build_opts, :paginate_name, "paginate")
+    paginate_name = Keyword.get(build_opts, :paginate_name, "pagination")
     with_paginate = Keyword.get(build_opts, :with_paginate, true)
     callback = Keyword.get(build_opts, :callback, fn queryable -> queryable end)
     prefix = Keyword.get(build_opts, :prefix)
