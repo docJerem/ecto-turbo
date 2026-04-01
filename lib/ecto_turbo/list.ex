@@ -69,7 +69,7 @@ defmodule EctoTurbo.List do
       pagination: %{
         current_page: current_page,
         current_pages: paginate[:current_pages] || [1],
-        per_page: paginate[:per_page] || 10,
+        per_page: paginate[:per_page] || Keyword.get(opts, :default_per_page,10),
         total_pages: total_pages,
         next_page: paginate[:next_page] || total_pages,
         prev_page: paginate[:prev_page] || 1
