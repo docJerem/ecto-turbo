@@ -11,7 +11,6 @@ defmodule EctoTurbo.List do
   ## Default JSON Output
 
       {
-        "__type__": "List",
         "data": [...],
         "pagination": {
           "current_page": 1,
@@ -27,7 +26,7 @@ defmodule EctoTurbo.List do
   ## Custom keys
 
       EctoTurbo.List.new(items, paginate, entry_name: "users", paginate_name: "meta")
-      # => {"__type__": "List", "users": [...], "meta": {...}, "total": 42}
+      # => {"data": [...], "pagination": {...}, "total": 42}
 
   """
 
@@ -39,14 +38,12 @@ defmodule EctoTurbo.List do
           paginate_name: String.t()
         }
 
-  defstruct [
-    __type__: "List",
-    data: [],
-    pagination: %{},
-    total: 0,
-    entry_name: "data",
-    paginate_name: "pagination"
-  ]
+  defstruct __type__: "List",
+            data: [],
+            pagination: %{},
+            total: 0,
+            entry_name: "data",
+            paginate_name: "pagination"
 
   @doc """
   Builds a List from raw query results and paginate metadata.
@@ -69,7 +66,7 @@ defmodule EctoTurbo.List do
       pagination: %{
         current_page: current_page,
         current_pages: paginate[:current_pages] || [1],
-        per_page: paginate[:per_page] || Keyword.get(opts, :default_per_page,10),
+        per_page: paginate[:per_page] || Keyword.get(opts, :default_per_page, 10),
         total_pages: total_pages,
         next_page: paginate[:next_page] || total_pages,
         prev_page: paginate[:prev_page] || 1
