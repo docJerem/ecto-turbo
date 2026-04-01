@@ -80,7 +80,6 @@ defmodule EctoTurbo.List do
   defimpl Jason.Encoder do
     def encode(list, opts) do
       %{
-        "__type__" => "List",
         list.entry_name => list.data,
         list.paginate_name => list.pagination,
         "total" => list.total
