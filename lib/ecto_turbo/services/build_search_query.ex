@@ -82,6 +82,30 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   @spec search_types() :: [String.t()]
   def search_types, do: @search_types
 
+  @doc """
+  Coerces the search values to the representation expected by the database for
+  the given attribute.
+
+  Fields whose stored value differs from the query param (e.g. `Ecto.Enum`,
+  stored as an integer) carry their schema type on the `%Attribute{}`. Those
+  values are cast then dumped so the adapter receives the underlying value.
+  Attributes without a coercible type pass their values through untouched.
+  """
+  @spec coerce_values(Attribute.t(), list()) :: list()
+  def coerce_values(%Attribute{type: nil}, values), do: values
+
+  def coerce_values(%Attribute{type: type}, values),
+    do: Enum.map(values, &coerce_value(type, &1))
+
+  defp coerce_value(type, value) do
+    with {:ok, cast} <- Ecto.Type.cast(type, value),
+         {:ok, dumped} <- Ecto.Type.dump(type, cast) do
+      dumped
+    else
+      _ -> value
+    end
+  end
+
   # Generate field_dynamic/2 helpers for binding positions 0-5.
   # Position 0 is the main query, 1+ are joins.
   @doc false
