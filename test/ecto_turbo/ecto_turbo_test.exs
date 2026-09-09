@@ -394,6 +394,17 @@ defmodule EctoTurboTest do
     end
   end
 
+  describe "test search with datetime values" do
+    test "When the search value is a NaiveDateTime" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => ~N[2000-01-01 00:00:00]})
+
+      %{data: data} = do_run_search(%{"inserted_at_lt" => ~N[2100-01-01 00:00:00]})
+      assert length(data) == 3
+    end
+  end
+
   # run search.
   defp do_run_search(filter) do
     TE.turbo(Post, %{"filter" => filter})
