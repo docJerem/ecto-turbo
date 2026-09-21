@@ -13,7 +13,7 @@ Add `ecto_turbo` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ecto_turbo, "~> 0.1.0"}
+    {:ecto_turbo, "~> 1.1"}
   ]
 end
 ```
