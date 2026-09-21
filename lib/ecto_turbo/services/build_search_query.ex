@@ -142,12 +142,13 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
 
   defp cast(type, value), do: Ecto.Type.cast(type, value)
 
-  defp expected({:parameterized, {Ecto.Enum, params}}), do: expected_enum(params)
-  defp expected({:parameterized, Ecto.Enum, params}), do: expected_enum(params)
-  defp expected(type), do: "expected a value of type #{inspect(type)}"
-
-  defp expected_enum(%{mappings: mappings}),
+  # Only the Ecto >= 3.12 parameterized shape is matched here: on older Ecto
+  # the enum still works (see `Attribute.coercible_type/2`), it just gets the
+  # generic message.
+  defp expected({:parameterized, {Ecto.Enum, %{mappings: mappings}}}),
     do: "expected one of #{inspect(Keyword.keys(mappings))}"
+
+  defp expected(type), do: "expected a value of type #{inspect(type)}"
 
   # Generate field_dynamic/2 helpers for binding positions 0-5.
   # Position 0 is the main query, 1+ are joins.

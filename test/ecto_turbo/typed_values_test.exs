@@ -8,6 +8,7 @@ defmodule EctoTurbo.TypedValuesTest do
 
   use EctoTurbo.DataCase
 
+  alias Ecto.Adapters.SQL
   alias EctoTurbo.Schemas.Post
   alias EctoTurbo.TestRepo
 
@@ -24,7 +25,7 @@ defmodule EctoTurbo.TypedValuesTest do
 
   defp params(q) do
     {_sql, params} =
-      Ecto.Adapters.SQL.to_sql(:all, TestRepo, EctoTurbo.turboq(Resource, %{"q" => q}))
+      SQL.to_sql(:all, TestRepo, EctoTurbo.turboq(Resource, %{"q" => q}))
 
     params
   end
