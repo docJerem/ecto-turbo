@@ -25,10 +25,17 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
   @spec extract(String.t(), module()) :: t() | {:error, atom()}
   def extract(key, module) do
     case get_name(module, key) || get_assoc_name(module, key) do
-      nil -> {:error, :attribute_not_found}
-      {_assoc, nil} -> {:error, :attribute_not_found}
-      {assoc, name} -> %Attribute{parent: assoc, name: name, type: assoc_type(module, assoc, name)}
-      name -> %Attribute{parent: :query, name: name, type: coercible_type(module, name)}
+      nil ->
+        {:error, :attribute_not_found}
+
+      {_assoc, nil} ->
+        {:error, :attribute_not_found}
+
+      {assoc, name} ->
+        %Attribute{parent: assoc, name: name, type: assoc_type(module, assoc, name)}
+
+      name ->
+        %Attribute{parent: :query, name: name, type: coercible_type(module, name)}
     end
   end
 
@@ -42,9 +49,14 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
   # Only surface types whose values need coercion before query time. Enums are
   # stored under a different representation (e.g. integers), so the string params
   # must be cast + dumped or the database rejects them.
+  #
+  # Parameterized types are `{:parameterized, {mod, params}}` since Ecto 3.12 and
+  # were `{:parameterized, mod, params}` before; both are matched so the coercion
+  # does not silently turn off on older Ecto versions.
   defp coercible_type(module, name) do
     case module.__schema__(:type, name) do
       {:parameterized, {Ecto.Enum, _params}} = type -> type
+      {:parameterized, Ecto.Enum, _params} = type -> type
       _ -> nil
     end
   end

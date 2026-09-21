@@ -46,7 +46,7 @@ defmodule EctoTurbo.Builder.Where do
        ) do
     attrs
     |> Enum.map(fn attr ->
-      coerced = BuildSearchQuery.coerce_values(attr, vals)
+      coerced = BuildSearchQuery.coerce_values(search_type, attr, vals)
       BuildSearchQuery.handle_expr(search_type, attr, coerced, binding_keys)
     end)
     |> combine_dynamics(combinator)

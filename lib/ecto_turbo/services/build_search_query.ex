@@ -82,29 +82,53 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   @spec search_types() :: [String.t()]
   def search_types, do: @search_types
 
+  # Search types whose values are compared against the column value and must
+  # therefore be in the column's stored representation. Pattern (`like`, ...)
+  # and predicate (`is_null`, `is_true`, ...) search types are left untouched.
+  @coercible_search_types ~w(eq not_eq lt lteq gt gteq in not_in between)a
+
   @doc """
   Coerces the search values to the representation expected by the database for
-  the given attribute.
+  the given attribute and search type.
 
   Fields whose stored value differs from the query param (e.g. `Ecto.Enum`,
   stored as an integer) carry their schema type on the `%Attribute{}`. Those
   values are cast then dumped so the adapter receives the underlying value.
-  Attributes without a coercible type pass their values through untouched.
+  Attributes without a coercible type, and search types that do not compare
+  the column against a value, pass their values through untouched.
+
+  Raises `ArgumentError` when a value cannot be cast to the attribute type.
   """
-  @spec coerce_values(Attribute.t(), list()) :: list()
-  def coerce_values(%Attribute{type: nil}, values), do: values
+  @spec coerce_values(atom(), Attribute.t(), list()) :: list()
+  def coerce_values(_search_type, %Attribute{type: nil}, values), do: values
 
-  def coerce_values(%Attribute{type: type}, values),
-    do: Enum.map(values, &coerce_value(type, &1))
+  def coerce_values(:between, %Attribute{} = attribute, [value]) when is_binary(value),
+    do: coerce_values(:between, attribute, String.split(value, ".."))
 
-  defp coerce_value(type, value) do
+  def coerce_values(search_type, %Attribute{type: type} = attribute, values)
+      when search_type in @coercible_search_types,
+      do: Enum.map(values, &coerce_value(type, attribute, &1))
+
+  def coerce_values(_search_type, %Attribute{}, values), do: values
+
+  defp coerce_value(type, attribute, value) do
     with {:ok, cast} <- Ecto.Type.cast(type, value),
          {:ok, dumped} <- Ecto.Type.dump(type, cast) do
       dumped
     else
-      _ -> value
+      _ ->
+        raise ArgumentError,
+              "invalid search value #{inspect(value)} for attribute #{inspect(attribute.name)}, " <>
+                expected(type)
     end
   end
+
+  defp expected({:parameterized, {Ecto.Enum, params}}), do: expected_enum(params)
+  defp expected({:parameterized, Ecto.Enum, params}), do: expected_enum(params)
+  defp expected(type), do: "expected a value of type #{inspect(type)}"
+
+  defp expected_enum(%{mappings: mappings}),
+    do: "expected one of #{inspect(Keyword.keys(mappings))}"
 
   # Generate field_dynamic/2 helpers for binding positions 0-5.
   # Position 0 is the main query, 1+ are joins.
