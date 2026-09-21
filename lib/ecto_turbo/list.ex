@@ -16,12 +16,16 @@ defmodule EctoTurbo.List do
           "current_page": 1,
           "current_pages": [1],
           "per_page": 10,
-          "next_page": 1,
-          "prev_page": 1,
+          "next_page": null,
+          "prev_page": null,
           "total_pages": 1
         },
         "total": 42
       }
+
+  `next_page` and `prev_page` are `null` when there is no such page — on a
+  single page, both are `null`. Walk a collection by following `next_page`
+  until it is `null`.
 
   ## Custom keys
 
@@ -68,8 +72,13 @@ defmodule EctoTurbo.List do
         current_pages: paginate[:current_pages] || [1],
         per_page: paginate[:per_page] || Keyword.get(opts, :default_per_page, 10),
         total_pages: total_pages,
-        next_page: paginate[:next_page] || total_pages,
-        prev_page: paginate[:prev_page] || 1
+        # `Map.get/3`, not `||`: the paginate hook returns `nil` on purpose when
+        # there is no next (or previous) page, and `nil` is the meaningful
+        # value. `||` would swallow it and hand back a page number that does not
+        # exist, so a client looping on `next_page` would never terminate.
+        # The default still applies when the key is absent entirely.
+        next_page: Map.get(paginate, :next_page, total_pages),
+        prev_page: Map.get(paginate, :prev_page, 1)
       }
     }
   end
