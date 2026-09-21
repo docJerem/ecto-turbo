@@ -134,7 +134,7 @@ query = EctoTurbo.turboq(Post, %{"q" => %{"name_like" => "elixir"}, "s" => "name
 
 - Safer atom conversion using `String.to_existing_atom/1` to prevent atom table exhaustion
 - Fixed `end_with` / `not_end_with` search types (was incorrectly using `%value%` instead of `%value`)
-- Compatible with `ecto_sql ~> 3.11` (OrderBy `:append` parameter)
+- Compatible with `ecto_sql ~> 3.12` (OrderBy `:append` parameter)
 - Modern Elixir syntax (`~c` sigils, `not in` operator)
 - Compile-time warnings as errors
 

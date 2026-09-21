@@ -32,7 +32,7 @@ defmodule EctoTurbo.MixProject do
 
   defp deps do
     [
-      {:ecto_sql, "~> 3.11"},
+      {:ecto_sql, "~> 3.12"},
       {:postgrex, "~> 0.19", only: :test},
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:ex_machina, "~> 2.8", only: :test},

@@ -142,9 +142,6 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
 
   defp cast(type, value), do: Ecto.Type.cast(type, value)
 
-  # Only the Ecto >= 3.12 parameterized shape is matched here: on older Ecto
-  # the enum still works (see `Attribute.coercible_type/2`), it just gets the
-  # generic message.
   defp expected({:parameterized, {Ecto.Enum, %{mappings: mappings}}}),
     do: "expected one of #{inspect(Keyword.keys(mappings))}"
 
