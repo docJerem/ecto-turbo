@@ -1,0 +1,83 @@
+name: CI
+
+# Runs the test suite and the full `mix audit` (credo, deps & hex audit, unused
+# deps, dialyzer, doctor, format check, sobelow) on every push to main and every
+# PR. The `audit` and `test` aliases are defined in mix.exs and are the single
+# source of truth; the `test` alias also drops/creates/migrates the test repo.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Opt every JavaScript action onto Node 24. GitHub deprecated Node 20 (the
+# runtime of checkout/cache) and forces Node 24 by default from 2026-06-16;
+# setting this silences the deprecation warning and is forward-compatible.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-audit:
+    name: Test & audit
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Erlang/Elixir versions come from .tool-versions so CI always matches
+      # what developers run locally via asdf/mise.
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+
+      # Cache fetched deps and compiled artifacts (incl. the dialyzer PLT in
+      # _build) keyed on mix.lock so cold runs only happen when deps change.
+      - name: Cache deps and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('.tool-versions') }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-${{ hashFiles('.tool-versions') }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile (warnings as errors)
+        run: mix compile --warnings-as-errors
+        env:
+          MIX_ENV: test
+
+      - name: Run tests
+        run: mix test
+        env:
+          MIX_ENV: test
+
+      - name: Run audit
+        run: mix audit
