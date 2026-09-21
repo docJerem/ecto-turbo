@@ -5,7 +5,12 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
 
   alias EctoTurbo.Hooks.Search.Attribute
 
-  defstruct name: nil, parent: nil
+  # `type` holds the resolved schema type when the field's values need coercion
+  # before hitting the database (currently `Ecto.Enum`). It stays `nil` for
+  # plain fields whose query params can be passed through as-is, and is hidden
+  # from `Inspect` so it doesn't leak into unrelated output.
+  @derive {Inspect, optional: [:type]}
+  defstruct name: nil, parent: nil, type: nil
 
   @type t :: %__MODULE__{}
 
@@ -20,10 +25,39 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
   @spec extract(String.t(), module()) :: t() | {:error, atom()}
   def extract(key, module) do
     case get_name(module, key) || get_assoc_name(module, key) do
-      nil -> {:error, :attribute_not_found}
-      {_assoc, nil} -> {:error, :attribute_not_found}
-      {assoc, name} -> %Attribute{parent: assoc, name: name}
-      name -> %Attribute{parent: :query, name: name}
+      nil ->
+        {:error, :attribute_not_found}
+
+      {_assoc, nil} ->
+        {:error, :attribute_not_found}
+
+      {assoc, name} ->
+        %Attribute{parent: assoc, name: name, type: assoc_type(module, assoc, name)}
+
+      name ->
+        %Attribute{parent: :query, name: name, type: coercible_type(module, name)}
+    end
+  end
+
+  defp assoc_type(module, assoc, name) do
+    case module.__schema__(:association, assoc) do
+      %{related: related} -> coercible_type(related, name)
+      _ -> nil
+    end
+  end
+
+  # Only surface types whose values need coercion before query time. Enums are
+  # stored under a different representation (e.g. integers), so the string params
+  # must be cast + dumped or the database rejects them.
+  #
+  # Parameterized types are `{:parameterized, {mod, params}}` since Ecto 3.12 and
+  # were `{:parameterized, mod, params}` before; both are matched so the coercion
+  # does not silently turn off on older Ecto versions.
+  defp coercible_type(module, name) do
+    case module.__schema__(:type, name) do
+      {:parameterized, {Ecto.Enum, _params}} = type -> type
+      {:parameterized, Ecto.Enum, _params} = type -> type
+      _ -> nil
     end
   end
 
