@@ -15,11 +15,18 @@ defmodule EctoTurbo.BuilderTest do
                "where: p0.inserted_at < ^~N[2024-01-01 00:00:00]"
     end
 
-    test "keeps a Date value intact" do
+    test "casts an ISO 8601 string to the column's datetime type" do
+      params = %{"q" => %{"inserted_at_gt" => "2024-01-01T00:00:00Z"}}
+
+      assert Macro.to_string(Builder.run(Post, params)) =~
+               "where: p0.inserted_at > ^~N[2024-01-01 00:00:00]"
+    end
+
+    test "treats a Date value against a datetime column as midnight" do
       params = %{"q" => %{"inserted_at_gt" => ~D[2024-01-01]}}
 
       assert Macro.to_string(Builder.run(Post, params)) =~
-               "where: p0.inserted_at > ^~D[2024-01-01]"
+               "where: p0.inserted_at > ^~N[2024-01-01 00:00:00]"
     end
 
     test "keeps struct values nested in a list intact" do

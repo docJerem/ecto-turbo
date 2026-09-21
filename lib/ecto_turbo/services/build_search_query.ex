@@ -92,8 +92,10 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   the given attribute and search type.
 
   Fields whose stored value differs from the query param (e.g. `Ecto.Enum`,
-  stored as an integer) carry their schema type on the `%Attribute{}`. Those
-  values are cast then dumped so the adapter receives the underlying value.
+  stored as an integer, or date/time columns queried with ISO 8601 strings)
+  carry their schema type on the `%Attribute{}`. Those values are cast then
+  dumped so the adapter receives the underlying value. A date-only value
+  (`"2024-01-01"` or a `Date`) against a datetime column is taken as midnight.
   Attributes without a coercible type, and search types that do not compare
   the column against a value, pass their values through untouched.
 
@@ -112,7 +114,7 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   def coerce_values(_search_type, %Attribute{}, values), do: values
 
   defp coerce_value(type, attribute, value) do
-    with {:ok, cast} <- Ecto.Type.cast(type, value),
+    with {:ok, cast} <- cast(type, value),
          {:ok, dumped} <- Ecto.Type.dump(type, cast) do
       dumped
     else
@@ -122,6 +124,18 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
                 expected(type)
     end
   end
+
+  @datetime_types ~w(naive_datetime naive_datetime_usec utc_datetime utc_datetime_usec)a
+
+  # A date-only value against a datetime column falls back to that date at midnight.
+  defp cast(type, value) when type in @datetime_types do
+    with :error <- Ecto.Type.cast(type, value),
+         {:ok, date} <- Ecto.Type.cast(:date, value) do
+      Ecto.Type.cast(type, NaiveDateTime.new!(date, ~T[00:00:00]))
+    end
+  end
+
+  defp cast(type, value), do: Ecto.Type.cast(type, value)
 
   defp expected({:parameterized, {Ecto.Enum, params}}), do: expected_enum(params)
   defp expected({:parameterized, Ecto.Enum, params}), do: expected_enum(params)

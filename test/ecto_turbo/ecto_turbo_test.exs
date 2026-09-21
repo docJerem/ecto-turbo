@@ -403,6 +403,33 @@ defmodule EctoTurboTest do
       %{data: data} = do_run_search(%{"inserted_at_lt" => ~N[2100-01-01 00:00:00]})
       assert length(data) == 3
     end
+
+    test "When the search value is an ISO 8601 string (HTTP params)" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => "2000-01-01 00:00:00"})
+
+      %{data: data} = do_run_search(%{"inserted_at_lt" => "2100-01-01T00:00:00Z"})
+      assert length(data) == 3
+
+      %{data: data} =
+        do_run_search(%{"inserted_at_between" => "2000-01-01T00:00:00Z..2100-01-01T00:00:00Z"})
+
+      assert length(data) == 3
+    end
+
+    test "When the search value is a date-only string against a datetime column" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => "2000-01-01"})
+
+      %{data: data} = do_run_search(%{"inserted_at_between" => "2000-01-01..2100-01-01"})
+      assert length(data) == 3
+
+      assert_raise ArgumentError, ~r/invalid search value "not a date"/, fn ->
+        do_run_search(%{"inserted_at_lt" => "not a date"})
+      end
+    end
   end
 
   # run search.
