@@ -1,5 +1,7 @@
 # EctoTurbo
 
+[![CI](https://github.com/docJerem/ecto-turbo/actions/workflows/ci.yml/badge.svg)](https://github.com/docJerem/ecto-turbo/actions/workflows/ci.yml)
+
 A rich Ecto component for searching, sorting, and paginating queries.
 
 EctoTurbo is a consolidated fork of [turbo_ecto](https://github.com/zven21/turbo_ecto), with production-tested bug fixes, security improvements, and modern Elixir compatibility.
