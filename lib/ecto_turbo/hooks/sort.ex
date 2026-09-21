@@ -28,7 +28,8 @@ defmodule EctoTurbo.Hooks.Sort do
           %EctoTurbo.Hooks.Sort{
             attribute: %EctoTurbo.Hooks.Search.Attribute{
               name: :inserted_at,
-              parent: :query
+              parent: :query,
+              type: :naive_datetime
             },
             direction: :desc
           }
@@ -44,14 +45,16 @@ defmodule EctoTurbo.Hooks.Sort do
           %EctoTurbo.Hooks.Sort{
             attribute: %EctoTurbo.Hooks.Search.Attribute{
               name: :updated_at,
-              parent: :query
+              parent: :query,
+              type: :naive_datetime
             },
             direction: :desc
           },
           %EctoTurbo.Hooks.Sort{
             attribute: %EctoTurbo.Hooks.Search.Attribute{
               name: :inserted_at,
-              parent: :query
+              parent: :query,
+              type: :naive_datetime
             },
             direction: :asc
           }

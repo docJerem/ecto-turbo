@@ -47,9 +47,15 @@ defmodule EctoTurbo.Utils do
       iex> EctoTurbo.Utils.stringify_keys(map)
       %{"a" => 1, "b" => %{"c" => 3, "d" => 4}}
 
+      iex> EctoTurbo.Utils.stringify_keys(%{inserted_at: ~N[2024-01-01 00:00:00]})
+      %{"inserted_at" => ~N[2024-01-01 00:00:00]}
+
   """
   @spec stringify_keys(any()) :: any()
-  def stringify_keys(map = %{}) do
+  # A struct is a value, not a key/value container: pass it through untouched.
+  def stringify_keys(%_{} = struct), do: struct
+
+  def stringify_keys(map) when is_map(map) do
     Enum.into(map, %{}, fn {k, v} -> {to_string(k), stringify_keys(v)} end)
   end
 
@@ -76,13 +82,20 @@ defmodule EctoTurbo.Utils do
       iex> EctoTurbo.Utils.compaction!([nil, "string", %{nil_nil: nil, not_nil: "a value", nested: %{nil_val: nil, other: "other", nested_empty: %{}}}, ["nested", nil, 2]])
       ["string", %{not_nil: "a value", nested: %{other: "other"}}, ["nested", 2]]
 
+      iex> EctoTurbo.Utils.compaction!(%{inserted_at: ~N[2024-01-01 00:00:00], nil_val: nil})
+      %{inserted_at: ~N[2024-01-01 00:00:00]}
+
   """
   @spec compaction!(map() | list()) :: map() | list()
   def compaction!(value)
 
+  # Same as `stringify_keys/1`: a struct is a leaf value, never recursed into.
+  def compaction!(%_{} = value), do: value
+
   def compaction!(value) when is_map(value) do
     compactor = fn {k, v}, acc ->
       cond do
+        is_struct(v) -> Map.put_new(acc, k, v)
         is_map(v) and Enum.empty?(v) -> acc
         is_map(v) or is_list(v) -> Map.put_new(acc, k, compaction!(v))
         true -> Map.put_new(acc, k, v)
@@ -97,6 +110,7 @@ defmodule EctoTurbo.Utils do
   def compaction!(value) when is_list(value) do
     compactor = fn elem, acc ->
       cond do
+        is_struct(elem) -> acc ++ [elem]
         is_list(elem) and Enum.empty?(elem) -> acc
         is_list(elem) or is_map(elem) -> acc ++ [compaction!(elem)]
         is_nil(elem) -> acc

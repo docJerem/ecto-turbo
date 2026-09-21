@@ -1,8 +1,9 @@
 defmodule EctoTurbo.EnumCoercionTest do
   @moduledoc """
-  Guards against `Ecto.Enum` search values reaching the database in their cast
-  form (e.g. the string `"published"`) instead of their dumped representation
-  (the integer `1`), which the adapter rejects for the underlying column.
+  Guards against `Ecto.Enum` search values reaching the database as raw
+  strings (e.g. `"published"`): they are cast to the enum atom up front so
+  invalid values raise a clear error, and typed against the column so the
+  adapter dumps them to the stored representation (the integer `1`).
   """
 
   use EctoTurbo.DataCase
@@ -17,9 +18,12 @@ defmodule EctoTurbo.EnumCoercionTest do
   end
 
   describe "coerce_values/3" do
-    test "dumps enum string values to their stored representation" do
-      assert BuildSearchQuery.coerce_values(:in, status_attribute(), ["published"]) == [1]
-      assert BuildSearchQuery.coerce_values(:eq, status_attribute(), ["draft"]) == [0]
+    test "casts enum string values to their atom representation" do
+      assert BuildSearchQuery.coerce_values(:in, status_attribute(), ["published"]) == [
+               :published
+             ]
+
+      assert BuildSearchQuery.coerce_values(:eq, status_attribute(), ["draft"]) == [:draft]
     end
 
     test "leaves untyped attributes untouched" do
@@ -35,7 +39,7 @@ defmodule EctoTurbo.EnumCoercionTest do
 
     test "splits the `begin..end` between form before coercing" do
       assert BuildSearchQuery.coerce_values(:between, status_attribute(), ["draft..published"]) ==
-               [0, 1]
+               [:draft, :published]
     end
 
     test "raises a clear error when the value cannot be cast to the enum" do

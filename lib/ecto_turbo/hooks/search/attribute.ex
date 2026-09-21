@@ -6,7 +6,7 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
   alias EctoTurbo.Hooks.Search.Attribute
 
   # `type` holds the resolved schema type when the field's values need coercion
-  # before hitting the database (currently `Ecto.Enum`). It stays `nil` for
+  # before hitting the database (`Ecto.Enum`, date/time types). It stays `nil` for
   # plain fields whose query params can be passed through as-is, and is hidden
   # from `Inspect` so it doesn't leak into unrelated output.
   @derive {Inspect, optional: [:type]}
@@ -48,15 +48,15 @@ defmodule EctoTurbo.Hooks.Search.Attribute do
 
   # Only surface types whose values need coercion before query time. Enums are
   # stored under a different representation (e.g. integers), so the string params
-  # must be cast + dumped or the database rejects them.
-  #
-  # Parameterized types are `{:parameterized, {mod, params}}` since Ecto 3.12 and
-  # were `{:parameterized, mod, params}` before; both are matched so the coercion
-  # does not silently turn off on older Ecto versions.
+  # must be cast + dumped or the database rejects them. Date/time columns are
+  # compared through an interpolated `field/2`, so Ecto cannot infer the param
+  # type and would hand a raw string to the adapter, which rejects it.
+  @temporal_types ~w(date time time_usec naive_datetime naive_datetime_usec utc_datetime utc_datetime_usec)a
+
   defp coercible_type(module, name) do
     case module.__schema__(:type, name) do
       {:parameterized, {Ecto.Enum, _params}} = type -> type
-      {:parameterized, Ecto.Enum, _params} = type -> type
+      type when type in @temporal_types -> type
       _ -> nil
     end
   end

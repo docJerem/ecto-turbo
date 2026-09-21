@@ -91,13 +91,15 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   Coerces the search values to the representation expected by the database for
   the given attribute and search type.
 
-  Fields whose stored value differs from the query param (e.g. `Ecto.Enum`,
-  stored as an integer) carry their schema type on the `%Attribute{}`. Those
-  values are cast then dumped so the adapter receives the underlying value.
-  Attributes without a coercible type, and search types that do not compare
-  the column against a value, pass their values through untouched.
-
-  Raises `ArgumentError` when a value cannot be cast to the attribute type.
+  Every compared value is typed against its column in `handle_expr/4`, so Ecto
+  casts and dumps it through the adapter like it would for `q.field == ^value`.
+  This function only handles what Ecto cannot do on its own: a clear
+  `ArgumentError` at build time (instead of an `Ecto.Query.CastError` at query
+  time) for `Ecto.Enum` and date/time columns, the `begin..end` between form,
+  and a date-only value (`"2024-01-01"` or a `Date`) against a datetime column,
+  which is taken as midnight. Attributes without such a type, and search types
+  that do not compare the column against a value, pass their values through
+  untouched.
   """
   @spec coerce_values(atom(), Attribute.t(), list()) :: list()
   def coerce_values(_search_type, %Attribute{type: nil}, values), do: values
@@ -112,10 +114,12 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   def coerce_values(_search_type, %Attribute{}, values), do: values
 
   defp coerce_value(type, attribute, value) do
-    with {:ok, cast} <- Ecto.Type.cast(type, value),
-         {:ok, dumped} <- Ecto.Type.dump(type, cast) do
-      dumped
-    else
+    case cast(type, value) do
+      {:ok, cast} ->
+        cast
+
+      # `Ecto.Type.cast/2` returns a bare `:error` or, for parameterized
+      # types such as `Ecto.Enum`, `{:error, keyword}`.
       _ ->
         raise ArgumentError,
               "invalid search value #{inspect(value)} for attribute #{inspect(attribute.name)}, " <>
@@ -123,12 +127,25 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
     end
   end
 
-  defp expected({:parameterized, {Ecto.Enum, params}}), do: expected_enum(params)
-  defp expected({:parameterized, Ecto.Enum, params}), do: expected_enum(params)
-  defp expected(type), do: "expected a value of type #{inspect(type)}"
+  @datetime_types ~w(naive_datetime naive_datetime_usec utc_datetime utc_datetime_usec)a
 
-  defp expected_enum(%{mappings: mappings}),
+  # A date-only value against a datetime column falls back to that date at midnight.
+  defp cast(type, value) when type in @datetime_types do
+    with :error <- Ecto.Type.cast(type, value),
+         {:ok, date} <- Ecto.Type.cast(:date, value) do
+      Ecto.Type.cast(type, NaiveDateTime.new!(date, ~T[00:00:00]))
+    else
+      {:ok, _} = ok -> ok
+      _ -> :error
+    end
+  end
+
+  defp cast(type, value), do: Ecto.Type.cast(type, value)
+
+  defp expected({:parameterized, {Ecto.Enum, %{mappings: mappings}}}),
     do: "expected one of #{inspect(Keyword.keys(mappings))}"
+
+  defp expected(type), do: "expected a value of type #{inspect(type)}"
 
   # Generate field_dynamic/2 helpers for binding positions 0-5.
   # Position 0 is the main query, 1+ are joins.
@@ -141,6 +158,41 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   def field_dynamic(4, name), do: dynamic([_, _, _, _, b4], field(b4, ^name))
   def field_dynamic(5, name), do: dynamic([_, _, _, _, _, b5], field(b5, ^name))
 
+  # A field built through `field_dynamic/2` is opaque once interpolated, so
+  # `dynamic(^f == ^value)` gives Ecto no way to know which column `value` is
+  # compared to and the raw Elixir term reaches the adapter (a UUID string on a
+  # `:binary_id`, an ISO string on a timestamp, ...). Typing the value against
+  # the field restores the cast + adapter dump Ecto performs for `q.f == ^value`.
+  @doc false
+  @spec typed_value_dynamic(non_neg_integer(), atom(), term()) :: Ecto.Query.dynamic_expr()
+  def typed_value_dynamic(0, name, v), do: dynamic([q], type(^v, field(q, ^name)))
+  def typed_value_dynamic(1, name, v), do: dynamic([_, b1], type(^v, field(b1, ^name)))
+  def typed_value_dynamic(2, name, v), do: dynamic([_, _, b2], type(^v, field(b2, ^name)))
+  def typed_value_dynamic(3, name, v), do: dynamic([_, _, _, b3], type(^v, field(b3, ^name)))
+  def typed_value_dynamic(4, name, v), do: dynamic([_, _, _, _, b4], type(^v, field(b4, ^name)))
+
+  def typed_value_dynamic(5, name, v),
+    do: dynamic([_, _, _, _, _, b5], type(^v, field(b5, ^name)))
+
+  @doc false
+  @spec typed_values_dynamic(non_neg_integer(), atom(), list()) :: Ecto.Query.dynamic_expr()
+  def typed_values_dynamic(0, name, vs), do: dynamic([q], type(^vs, {:array, field(q, ^name)}))
+
+  def typed_values_dynamic(1, name, vs),
+    do: dynamic([_, b1], type(^vs, {:array, field(b1, ^name)}))
+
+  def typed_values_dynamic(2, name, vs),
+    do: dynamic([_, _, b2], type(^vs, {:array, field(b2, ^name)}))
+
+  def typed_values_dynamic(3, name, vs),
+    do: dynamic([_, _, _, b3], type(^vs, {:array, field(b3, ^name)}))
+
+  def typed_values_dynamic(4, name, vs),
+    do: dynamic([_, _, _, _, b4], type(^vs, {:array, field(b4, ^name)}))
+
+  def typed_values_dynamic(5, name, vs),
+    do: dynamic([_, _, _, _, _, b5], type(^vs, {:array, field(b5, ^name)}))
+
   @doc """
   Builds a dynamic expression for the given search type, attribute and values.
   """
@@ -149,32 +201,38 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
 
   def handle_expr(:eq, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f == ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f == ^v)
   end
 
   def handle_expr(:not_eq, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f != ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f != ^v)
   end
 
   def handle_expr(:lt, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f < ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f < ^v)
   end
 
   def handle_expr(:lteq, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f <= ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f <= ^v)
   end
 
   def handle_expr(:gt, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f > ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f > ^v)
   end
 
   def handle_expr(:gteq, attribute, [value | _], binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f >= ^value)
+    v = typed_value_dyn(attribute, value, binding_keys)
+    dynamic(^f >= ^v)
   end
 
   def handle_expr(:like, attribute, [value | _], binding_keys) do
@@ -203,12 +261,14 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
 
   def handle_expr(:in, attribute, values, binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f in ^values)
+    v = typed_values_dyn(attribute, values, binding_keys)
+    dynamic(^f in ^v)
   end
 
   def handle_expr(:not_in, attribute, values, binding_keys) do
     f = field_dyn(attribute, binding_keys)
-    dynamic(^f not in ^values)
+    v = typed_values_dyn(attribute, values, binding_keys)
+    dynamic(^f not in ^v)
   end
 
   def handle_expr(:start_with, attribute, [value | _], binding_keys) do
@@ -326,27 +386,27 @@ defmodule EctoTurbo.Services.BuildSearchQuery do
   def handle_expr(:between, attribute, [hd_val | last] = values, binding_keys)
       when length(values) == 2 do
     f = field_dyn(attribute, binding_keys)
-    tl_val = hd(last)
-    dynamic(^hd_val < ^f and ^f < ^tl_val)
+    lo = typed_value_dyn(attribute, hd_val, binding_keys)
+    hi = typed_value_dyn(attribute, hd(last), binding_keys)
+    dynamic(^lo < ^f and ^f < ^hi)
   end
 
+  # The bounds stay strings: they are typed against the column, so Ecto casts
+  # them to its actual type (an integer column would reject a parsed float).
   def handle_expr(:between, attribute, [value | _], binding_keys) when is_binary(value) do
-    result = value |> String.split("..") |> Enum.map(&maybe_to_number/1)
-    handle_expr(:between, attribute, result, binding_keys)
+    handle_expr(:between, attribute, String.split(value, ".."), binding_keys)
   end
-
-  defp maybe_to_number(str) when is_binary(str) do
-    case Float.parse(str) do
-      {num, ""} -> num
-      _ -> str
-    end
-  end
-
-  defp maybe_to_number(val), do: val
 
   # Resolves an attribute to a dynamic field expression at the correct binding position
-  defp field_dyn(%Attribute{name: name, parent: parent}, binding_keys) do
-    pos = Enum.find_index(binding_keys, &(&1 == parent)) || 0
-    field_dynamic(pos, name)
-  end
+  defp field_dyn(%Attribute{name: name} = attribute, binding_keys),
+    do: field_dynamic(binding_pos(attribute, binding_keys), name)
+
+  defp typed_value_dyn(%Attribute{name: name} = attribute, value, binding_keys),
+    do: typed_value_dynamic(binding_pos(attribute, binding_keys), name, value)
+
+  defp typed_values_dyn(%Attribute{name: name} = attribute, values, binding_keys),
+    do: typed_values_dynamic(binding_pos(attribute, binding_keys), name, values)
+
+  defp binding_pos(%Attribute{parent: parent}, binding_keys),
+    do: Enum.find_index(binding_keys, &(&1 == parent)) || 0
 end

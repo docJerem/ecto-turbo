@@ -137,7 +137,7 @@ defmodule EctoTurboTest do
       filter = %{"price_eq" => 10}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^10, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == type(^10, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -149,7 +149,7 @@ defmodule EctoTurboTest do
       filter = %{"price_not_eq" => 30}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != ^30, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != type(^30, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -160,7 +160,7 @@ defmodule EctoTurboTest do
       filter = %{"price_lt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^20, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < type(^20, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -172,7 +172,7 @@ defmodule EctoTurboTest do
       filter = %{"price_lteq" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^20, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= type(^20, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -183,7 +183,7 @@ defmodule EctoTurboTest do
       filter = %{"price_gt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > type(^20, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -195,7 +195,7 @@ defmodule EctoTurboTest do
       filter = %{"price_gt" => 20}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^20, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > type(^20, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -284,7 +284,7 @@ defmodule EctoTurboTest do
       filter = %{"price_in" => [10, 20]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in ^[10, 20], limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in type(^[10, 20], {:array, p0.price}), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -295,7 +295,7 @@ defmodule EctoTurboTest do
       filter = %{"price_not_in" => [10, 20]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in ^[10, 20], limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in type(^[10, 20], {:array, p0.price}), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -350,7 +350,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_true" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^true, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == type(^true, p0.available), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -361,7 +361,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_false" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^false, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == type(^false, p0.available), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -372,7 +372,7 @@ defmodule EctoTurboTest do
       filter = %{"available_is_not_false" => true}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available != ^false, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available != type(^false, p0.available), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -383,7 +383,7 @@ defmodule EctoTurboTest do
       filter = %{"price_between" => [9, 21]}
 
       assert do_build_search(filter) ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ^9 < p0.price and p0.price < ^21, limit: ^10, offset: ^0>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: type(^9, p0.price) < p0.price and p0.price < type(^21, p0.price), limit: ^10, offset: ^0>"
 
       post_fixture()
       %{data: data} = do_run_search(filter)
@@ -391,6 +391,44 @@ defmodule EctoTurboTest do
 
       %{data: data_2} = do_run_search(%{"price_between" => "9..21"})
       assert length(data_2) == 2
+    end
+  end
+
+  describe "test search with datetime values" do
+    test "When the search value is a NaiveDateTime" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => ~N[2000-01-01 00:00:00]})
+
+      %{data: data} = do_run_search(%{"inserted_at_lt" => ~N[2100-01-01 00:00:00]})
+      assert length(data) == 3
+    end
+
+    test "When the search value is an ISO 8601 string (HTTP params)" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => "2000-01-01 00:00:00"})
+
+      %{data: data} = do_run_search(%{"inserted_at_lt" => "2100-01-01T00:00:00Z"})
+      assert length(data) == 3
+
+      %{data: data} =
+        do_run_search(%{"inserted_at_between" => "2000-01-01T00:00:00Z..2100-01-01T00:00:00Z"})
+
+      assert length(data) == 3
+    end
+
+    test "When the search value is a date-only string against a datetime column" do
+      post_fixture()
+
+      assert %{data: []} = do_run_search(%{"inserted_at_lt" => "2000-01-01"})
+
+      %{data: data} = do_run_search(%{"inserted_at_between" => "2000-01-01..2100-01-01"})
+      assert length(data) == 3
+
+      assert_raise ArgumentError, ~r/invalid search value "not a date"/, fn ->
+        do_run_search(%{"inserted_at_lt" => "not a date"})
+      end
     end
   end
 
