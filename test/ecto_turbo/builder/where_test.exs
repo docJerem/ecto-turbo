@@ -43,42 +43,42 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string([condition([attr(:price)], :eq, [100])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^100>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == type(^100, p0.price)>"
     end
 
     test "not_eq search type" do
       query = build_query_string([condition([attr(:price)], :not_eq, [100])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != ^100>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price != type(^100, p0.price)>"
     end
 
     test "lt search type" do
       query = build_query_string([condition([attr(:price)], :lt, [50])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^50>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < type(^50, p0.price)>"
     end
 
     test "lteq search type" do
       query = build_query_string([condition([attr(:price)], :lteq, [50])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^50>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= type(^50, p0.price)>"
     end
 
     test "gt search type" do
       query = build_query_string([condition([attr(:price)], :gt, [50])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^50>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > type(^50, p0.price)>"
     end
 
     test "gteq search type" do
       query = build_query_string([condition([attr(:price)], :gteq, [50])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= ^50>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= type(^50, p0.price)>"
     end
 
     test "like search type" do
@@ -113,14 +113,14 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string([condition([attr(:price)], :in, [10, 20])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in ^[10, 20]>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price in type(^[10, 20], {:array, p0.price})>"
     end
 
     test "not_in search type" do
       query = build_query_string([condition([attr(:price)], :not_in, [10, 20])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in ^[10, 20]>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price not in type(^[10, 20], {:array, p0.price})>"
     end
 
     test "start_with search type" do
@@ -155,21 +155,21 @@ defmodule EctoTurbo.Builder.WhereTest do
       query = build_query_string([condition([attr(:available)], :is_true, [true])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^true>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == type(^true, p0.available)>"
     end
 
     test "is_false search type" do
       query = build_query_string([condition([attr(:available)], :is_false, [true])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == ^false>"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.available == type(^false, p0.available)>"
     end
 
     test "between search type" do
       query = build_query_string([condition([attr(:price)], :between, ["10", "20"])])
 
       assert query ==
-               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: ^\"10\" < p0.price and p0.price < ^\"20\">"
+               "#Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: type(^\"10\", p0.price) < p0.price and p0.price < type(^\"20\", p0.price)>"
     end
   end
 
@@ -182,7 +182,7 @@ defmodule EctoTurbo.Builder.WhereTest do
 
       query = build_query_string(conditions, :and)
 
-      assert query =~ "p0.price == ^100"
+      assert query =~ "p0.price == type(^100, p0.price)"
       assert query =~ "like(p0.name, ^\"%elixir%\")"
     end
 
@@ -195,9 +195,9 @@ defmodule EctoTurbo.Builder.WhereTest do
 
       query = build_query_string(conditions, :and)
 
-      assert query =~ "p0.price > ^10"
+      assert query =~ "p0.price > type(^10, p0.price)"
       assert query =~ "like(p0.name, ^\"%post%\")"
-      assert query =~ "p0.available == ^true"
+      assert query =~ "p0.available == type(^true, p0.available)"
     end
   end
 
@@ -242,8 +242,8 @@ defmodule EctoTurbo.Builder.WhereTest do
         |> Where.build(search_struct, query_with_join_binding())
         |> Macro.to_string()
 
-      assert query =~ "p0.price > ^10"
-      assert query =~ "c1.name == ^\"tech\""
+      assert query =~ "p0.price > type(^10, p0.price)"
+      assert query =~ "c1.name == type(^\"tech\", c1.name)"
     end
 
     test "OR between main and association field" do

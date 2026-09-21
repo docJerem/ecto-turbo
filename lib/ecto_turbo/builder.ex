@@ -27,31 +27,31 @@ defmodule EctoTurbo.Builder do
 
       iex> params = %{"q" => %{"price_eq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == ^100, limit: ^10, offset: ^0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price == type(^100, p0.price), limit: ^10, offset: ^0>
 
   When search_type is `:gt`
 
       iex> params = %{"q" => %{"price_gt" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > ^100, limit: ^10, offset: ^0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price > type(^100, p0.price), limit: ^10, offset: ^0>
 
   When search_type is `:lt`
 
       iex> params = %{"q" => %{"price_lt" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < ^100, limit: ^10, offset: ^0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price < type(^100, p0.price), limit: ^10, offset: ^0>
 
   When search_type is `:gteq`
 
       iex> params = %{"q" => %{"price_gteq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= ^100, limit: ^10, offset: ^0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price >= type(^100, p0.price), limit: ^10, offset: ^0>
 
   When search_type is `:lteq`
 
       iex> params = %{"q" => %{"price_lteq" => 100}}
       iex> EctoTurbo.Builder.run(EctoTurbo.Schemas.Post, params)
-      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= ^100, limit: ^10, offset: ^0>
+      #Ecto.Query<from p0 in EctoTurbo.Schemas.Post, where: p0.price <= type(^100, p0.price), limit: ^10, offset: ^0>
 
   when use `and` symbol condition
 
