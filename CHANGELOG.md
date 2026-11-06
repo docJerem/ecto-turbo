@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.1.1 (2026-11-06)
+
+### Security
+
+- Updated locked `ecto` to 3.14.3 to clear CVE-2026-118391. The `ecto_sql ~> 3.12` requirement is unchanged: applications depending on `ecto_turbo` should update `ecto` in their own lock file (`mix deps.update ecto`) (#9)
+
+### Changed
+
+- Updated other locked dependencies within their version requirements: `decimal` 3.2.0, `makeup` 1.2.3, `sobelow` 0.18.1 (#9)
+
 ## v1.1.0 (2026-09-21)
 
 ### Fixed
